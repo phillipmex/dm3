@@ -659,14 +659,15 @@
 
         <!-- Install Prompt - Fixed at bottom of page -->
         <div id="installPrompt" class="install-prompt">
-            <div class="flex items-center justify-between">
+            <div style="display: flex; align-items: center; justify-content: space-between;">
                 <div>
-                    <div class="font-bold">Instalar Doña Malena</div>
-                    <div class="text-sm opacity-90">Agregar a pantalla de inicio</div>
+                    <div style="font-weight: bold;">📱 Instalar Doña Malena</div>
+                    <div style="font-size: 0.9rem; opacity: 90%;">Acceso rápido desde tu pantalla de inicio</div>
                 </div>
-                <div class="flex space-x-2">
-                    <button onclick="hideInstallPrompt()" class="px-3 py-1 bg-white bg-opacity-20 rounded text-sm">Cancelar</button>
-                    <button onclick="installApp()" class="px-3 py-1 bg-white text-red-600 rounded text-sm font-bold">Instalar</button>
+                <div>
+                    <button onclick="installApp()" style="padding: 0.75rem 1.5rem; background: white; color: #DC2626; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">
+                        INSTALAR
+                    </button>
                 </div>
             </div>
         </div>
@@ -851,20 +852,56 @@
         });
 
         function hideInstallPrompt() {
-            document.getElementById('installPrompt').style.opacity = '0.5';
-            setTimeout(() => {
-                document.getElementById('installPrompt').style.opacity = '1';
-            }, 1000);
+            // This function is no longer needed but kept for compatibility
+            document.getElementById('installPrompt').style.display = 'none';
         }
 
         async function installApp() {
             if (deferredPrompt) {
+                // Show browser's native install dialog
                 deferredPrompt.prompt();
                 const { outcome } = await deferredPrompt.userChoice;
+                
+                if (outcome === 'accepted') {
+                    showNotification('¡App instalada exitosamente! 🎉');
+                    document.getElementById('installPrompt').style.display = 'none';
+                } else {
+                    showNotification('Instalación cancelada. Puedes instalar más tarde.');
+                }
                 deferredPrompt = null;
             } else {
-                alert('Para instalar la app, usa la opción "Agregar a pantalla de inicio" de tu navegador.');
+                // Fallback instructions for different browsers
+                showInstallInstructions();
             }
+        }
+
+        function showInstallInstructions() {
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+            const isAndroid = /Android/.test(navigator.userAgent);
+            
+            let instructions = '';
+            
+            if (isIOS) {
+                instructions = `📱 Para instalar en iPhone/iPad:
+                
+1. Toca el botón de compartir (⬆️) en Safari
+2. Selecciona "Agregar a pantalla de inicio"
+3. Toca "Agregar"`;
+            } else if (isAndroid) {
+                instructions = `📱 Para instalar en Android:
+                
+1. Toca el menú (⋮) en tu navegador
+2. Selecciona "Agregar a pantalla de inicio"
+3. Toca "Agregar"`;
+            } else {
+                instructions = `💻 Para instalar:
+                
+1. Busca el ícono de instalar (⬇️) en la barra de direcciones
+2. Haz clic en "Instalar"
+3. Confirma la instalación`;
+            }
+            
+            alert(instructions);
         }
 
         // Online/Offline Detection
