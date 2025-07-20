@@ -1,0 +1,992 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doña Malena - Auténtica Comida Mexicana</title>
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#FF0000">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Doña Malena">
+    
+    <!-- Icons -->
+    <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192x192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512x512.png">
+    <link rel="apple-touch-icon" href="icons/icon-192x192.png">
+    
+    <!-- Preconnect for performance -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary-red: #FF0000;
+            --secondary-red: #CC0000;
+            --terracotta: #D2691E;
+            --deep-green: #228B22;
+            --golden-yellow: #FFD700;
+            --cream-white: #FFF8DC;
+            --dark-text: #333;
+            --light-gray: #F5F5F5;
+            --shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            line-height: 1.6;
+            color: var(--dark-text);
+            background: linear-gradient(135deg, var(--cream-white) 0%, #ffffff 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 100%;
+            width: 100%;
+            margin: 0;
+            background: white;
+            min-height: 100vh;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, var(--primary-red) 0%, var(--secondary-red) 100%);
+            color: white;
+            padding: 1rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><polygon fill="rgba(255,255,255,0.1)" points="0,0 100,0 80,100 0,100"/></svg>');
+            background-size: 20px 20px;
+        }
+
+        .header h1 {
+            font-family: 'Dancing Script', cursive;
+            font-size: 2.5rem;
+            font-weight: 700;
+            position: relative;
+            z-index: 1;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            position: relative;
+            z-index: 1;
+            opacity: 0.9;
+            margin-top: 0.5rem;
+        }
+
+        /* Restaurant info */
+        .restaurant-info {
+            background: linear-gradient(135deg, var(--deep-green) 0%, #1a6b1a 100%);
+            color: white;
+            padding: 0.875rem;
+            margin: 0.75rem;
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+        }
+
+        .operating-hours {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .status-open {
+            background: var(--golden-yellow);
+            color: var(--dark-text);
+            padding: 0.25rem 0.5rem;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        /* Menu Items */
+        .menu-section {
+            padding: 1rem;
+            display: none;
+        }
+
+        .menu-section.active {
+            display: block;
+        }
+
+        .menu-item {
+            background: #B8E6E6;
+            margin-bottom: 1rem;
+            padding: 1.5rem;
+            border: none;
+            border-radius: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            position: relative;
+        }
+
+        .menu-item:hover {
+            transform: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .menu-item-content {
+            padding: 0;
+        }
+
+        .menu-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1.5rem;
+            gap: 1rem;
+        }
+
+        .menu-item-name {
+            font-weight: 700;
+            font-size: 1.5rem;
+            color: var(--primary-red);
+            flex: 1;
+            line-height: 1.2;
+            text-align: left;
+        }
+
+        .menu-item-price {
+            font-weight: 800;
+            font-size: 2rem;
+            color: var(--primary-red);
+            white-space: nowrap;
+            align-self: flex-end;
+        }
+
+        .menu-item-description {
+            font-size: 0.9375rem;
+            color: #666;
+            margin-bottom: 0.75rem;
+            line-height: 1.4;
+            text-align: left;
+        }
+
+        .add-to-cart-btn {
+            display: block;
+            margin: 0;
+            background: var(--primary-red);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 1.125rem;
+            transition: all 0.3s ease;
+            width: auto;
+            max-width: none;
+            min-width: 200px;
+        }
+
+        .add-to-cart-btn:hover {
+            background: var(--secondary-red);
+            transform: translateY(-1px);
+        }
+
+        /* Section Headers */
+        .section-header {
+            background: linear-gradient(135deg, var(--deep-green) 0%, #1a6b1a 100%);
+            color: white;
+            padding: 1rem;
+            margin: 1rem 0.75rem 0.5rem 0.75rem;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 1.25rem;
+            font-weight: 600;
+            box-shadow: var(--shadow);
+        }
+
+        /* Cart */
+        .cart {
+            position: fixed;
+            bottom: 1rem;
+            right: 1rem;
+            background: var(--primary-red);
+            color: white;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: var(--shadow);
+            transition: all 0.3s ease;
+            z-index: 1000;
+            font-size: 1.25rem;
+        }
+
+        .cart:hover {
+            transform: scale(1.05);
+        }
+
+        .cart-count {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            background: var(--golden-yellow);
+            color: var(--dark-text);
+            border-radius: 50%;
+            width: 22px;
+            height: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+
+        /* Install prompt styling */
+        .install-prompt {
+            position: static;
+            background: #DC2626;
+            color: white;
+            padding: 20px;
+            margin: 1rem 0.75rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            display: block;
+        }
+
+        .install-prompt-title {
+            font-weight: bold;
+            font-size: 1.25rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .install-prompt-subtitle {
+            font-size: 1rem;
+            opacity: 90%;
+        }
+
+        .install-btn {
+            padding: 1rem 2rem;
+            background: white;
+            color: #DC2626;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 1.125rem;
+            cursor: pointer;
+            min-width: 120px;
+        }
+
+        .offline-indicator {
+            background: #ff9800;
+            color: white;
+            padding: 0.5rem;
+            text-align: center;
+            font-size: 0.8125rem;
+            display: none;
+        }
+
+        .offline-indicator.show {
+            display: block;
+        }
+
+        /* Responsive design */
+        @media (max-width: 480px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .menu-section {
+                padding: 0.75rem;
+            }
+            
+            .menu-item {
+                padding: 2rem;
+                margin-bottom: 1.5rem;
+                border-radius: 20px;
+            }
+            
+            .menu-item-name {
+                font-size: 1.75rem;
+                line-height: 1.1;
+                font-weight: 700;
+            }
+            
+            .menu-item-price {
+                font-size: 2.25rem;
+                font-weight: 900;
+            }
+            
+            .menu-item-header {
+                margin-bottom: 2rem;
+            }
+            
+            .add-to-cart-btn {
+                padding: 1.5rem 2.5rem;
+                font-size: 1.25rem;
+                border-radius: 16px;
+                font-weight: 800;
+                min-width: 240px;
+            }
+            
+            .restaurant-info,             .install-prompt {
+                padding: 1.5rem;
+                margin: 1rem 0.75rem;
+            }
+            
+            .install-prompt-title {
+                font-size: 1.5rem;
+                margin-bottom: 0.75rem;
+            }
+            
+            .install-prompt-subtitle {
+                font-size: 1.125rem;
+                margin-bottom: 1rem;
+            }
+            
+            .install-btn {
+                padding: 1.25rem 2.5rem;
+                font-size: 1.25rem;
+                width: 100%;
+                margin-top: 1rem;
+            }
+
+            .install-prompt-content {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .install-prompt-buttons {
+                align-self: stretch;
+            }
+
+            .install-btn, .cancel-btn {
+                flex: 1;
+            }
+            
+            .section-header {
+                font-size: 1.5rem;
+                padding: 1.25rem;
+                margin: 1.25rem 0.75rem 1rem 0.75rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Offline Indicator -->
+        <div class="offline-indicator" id="offlineIndicator">
+            📵 Sin conexión - Algunas funciones pueden no estar disponibles
+        </div>
+
+        <!-- Header -->
+        <header class="header">
+            <h1>Doña Malena</h1>
+            <p>Auténtica Comida Mexicana</p>
+        </header>
+
+        <!-- Restaurant Info -->
+        <div class="restaurant-info">
+            <div class="operating-hours">
+                <div>
+                    <strong>🕐 Horarios:</strong><br>
+                    Martes a Domingo: 6:30 AM - 12:00 PM<br>
+                    <em>Lunes: CERRADO</em>
+                </div>
+                <div class="status-open" id="statusIndicator">ABIERTO</div>
+            </div>
+            <p style="margin-top: 0.5rem;">📍 <strong>Solo para recoger</strong> - No contamos con servicio a domicilio</p>
+        </div>
+
+        <!-- Menu Section - All Items -->
+        <main>
+            <section class="menu-section active" id="all-menu">
+                <!-- Food Items -->
+                <div class="menu-item">
+                    <div class="menu-item-content">
+                        <div class="menu-item-header">
+                            <span class="menu-item-name">Empanadas con carne</span>
+                            <span class="menu-item-price">$8</span>
+                        </div>
+                        <button class="add-to-cart-btn" onclick="addToCart('Empanadas con carne', 8)">
+                            Agregar al Carrito
+                        </button>
+                    </div>
+                </div>
+
+                <div class="menu-item">
+                    <div class="menu-item-content">
+                        <div class="menu-item-header">
+                            <span class="menu-item-name">Empanadas con Q.hebra</span>
+                            <span class="menu-item-price">$10</span>
+                        </div>
+                        <button class="add-to-cart-btn" onclick="addToCart('Empanadas con Q.hebra', 10)">
+                            Agregar al Carrito
+                        </button>
+                    </div>
+                </div>
+
+                <div class="menu-item">
+                    <div class="menu-item-content">
+                        <div class="menu-item-header">
+                            <span class="menu-item-name">Panuchós</span>
+                            <span class="menu-item-price">$18</span>
+                        </div>
+                        <button class="add-to-cart-btn" onclick="addToCart('Panuchós', 18)">
+                            Agregar al Carrito
+                        </button>
+                    </div>
+                </div>
+
+                <div class="menu-item">
+                    <div class="menu-item-content">
+                        <div class="menu-item-header">
+                            <span class="menu-item-name">Salbutes</span>
+                            <span class="menu-item-price">$18</span>
+                        </div>
+                        <button class="add-to-cart-btn" onclick="addToCart('Salbutes', 18)">
+                            Agregar al Carrito
+                        </button>
+                    </div>
+                </div>
+
+                <div class="menu-item">
+                    <div class="menu-item-content">
+                        <div class="menu-item-header">
+                            <span class="menu-item-name">Sopes</span>
+                            <span class="menu-item-price">$25</span>
+                        </div>
+                        <button class="add-to-cart-btn" onclick="addToCart('Sopes', 25)">
+                            Agregar al Carrito
+                        </button>
+                    </div>
+                </div>
+
+                <div class="menu-item">
+                    <div class="menu-item-content">
+                        <div class="menu-item-header">
+                            <span class="menu-item-name">Polcanes sencillos</span>
+                            <span class="menu-item-price">$8</span>
+                        </div>
+                        <button class="add-to-cart-btn" onclick="addToCart('Polcanes sencillos', 8)">
+                            Agregar al Carrito
+                        </button>
+                    </div>
+                </div>
+
+                <div class="menu-item">
+                    <div class="menu-item-content">
+                        <div class="menu-item-header">
+                            <span class="menu-item-name">Polcanes rellenos con carne</span>
+                            <span class="menu-item-price">$20</span>
+                        </div>
+                        <button class="add-to-cart-btn" onclick="addToCart('Polcanes rellenos con carne', 20)">
+                            Agregar al Carrito
+                        </button>
+                    </div>
+                </div>
+
+                <div class="menu-item">
+                    <div class="menu-item-content">
+                        <div class="menu-item-header">
+                            <span class="menu-item-name">Polcanes rellenos con carne y queso</span>
+                            <span class="menu-item-price">$25</span>
+                        </div>
+                        <button class="add-to-cart-btn" onclick="addToCart('Polcanes rellenos con carne y queso', 25)">
+                            Agregar al Carrito
+                        </button>
+                    </div>
+                </div>
+
+                <div class="menu-item">
+                    <div class="menu-item-content">
+                        <div class="menu-item-header">
+                            <span class="menu-item-name">Tortas (Bolillo)</span>
+                            <span class="menu-item-price">$35</span>
+                        </div>
+                        <button class="add-to-cart-btn" onclick="addToCart('Tortas (Bolillo)', 35)">
+                            Agregar al Carrito
+                        </button>
+                    </div>
+                </div>
+
+                <div class="menu-item">
+                    <div class="menu-item-content">
+                        <div class="menu-item-header">
+                            <span class="menu-item-name">Tortas especiales(jamón, queso y pollo)</span>
+                            <span class="menu-item-price">$38</span>
+                        </div>
+                        <button class="add-to-cart-btn" onclick="addToCart('Tortas especiales(jamón, queso y pollo)', 38)">
+                            Agregar al Carrito
+                        </button>
+                    </div>
+                </div>
+
+                <div class="menu-item">
+                    <div class="menu-item-content">
+                        <div class="menu-item-header">
+                            <span class="menu-item-name">Sandwiches</span>
+                            <span class="menu-item-price">$25</span>
+                        </div>
+                        <button class="add-to-cart-btn" onclick="addToCart('Sandwiches', 25)">
+                            Agregar al Carrito
+                        </button>
+                    </div>
+                </div>
+
+                <div class="menu-item">
+                    <div class="menu-item-content">
+                        <div class="menu-item-header">
+                            <span class="menu-item-name">Sandwiches especiales</span>
+                            <span class="menu-item-price">$28</span>
+                        </div>
+                        <button class="add-to-cart-btn" onclick="addToCart('Sandwiches especiales', 28)">
+                            Agregar al Carrito
+                        </button>
+                    </div>
+                </div>
+
+                <div class="menu-item">
+                    <div class="menu-item-content">
+                        <div class="menu-item-header">
+                            <span class="menu-item-name">Hamburguesas sencilla</span>
+                            <span class="menu-item-price">$55</span>
+                        </div>
+                        <button class="add-to-cart-btn" onclick="addToCart('Hamburguesas sencilla', 55)">
+                            Agregar al Carrito
+                        </button>
+                    </div>
+                </div>
+
+                <div class="menu-item">
+                    <div class="menu-item-content">
+                        <div class="menu-item-header">
+                            <span class="menu-item-name">Hamburguesas con papas</span>
+                            <span class="menu-item-price">$65</span>
+                        </div>
+                        <button class="add-to-cart-btn" onclick="addToCart('Hamburguesas con papas', 65)">
+                            Agregar al Carrito
+                        </button>
+                    </div>
+                </div>
+
+                <div class="menu-item">
+                    <div class="menu-item-content">
+                        <div class="menu-item-header">
+                            <span class="menu-item-name">Burritacos</span>
+                            <span class="menu-item-price">$20</span>
+                        </div>
+                        <button class="add-to-cart-btn" onclick="addToCart('Burritacos', 20)">
+                            Agregar al Carrito
+                        </button>
+                    </div>
+                </div>
+
+                <div class="menu-item">
+                    <div class="menu-item-content">
+                        <div class="menu-item-header">
+                            <span class="menu-item-name">Burritas</span>
+                            <span class="menu-item-price">$15</span>
+                        </div>
+                        <button class="add-to-cart-btn" onclick="addToCart('Burritas', 15)">
+                            Agregar al Carrito
+                        </button>
+                    </div>
+                </div>
+
+                <div class="menu-item">
+                    <div class="menu-item-content">
+                        <div class="menu-item-header">
+                            <span class="menu-item-name">zzebras</span>
+                            <span class="menu-item-price">$999</span>
+                        </div>
+                        <button class="add-to-cart-btn" onclick="addToCart('zzebras', 999)">
+                            Agregar al Carrito
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Bebidas Section Header -->
+                <div class="section-header">
+                    🥤 Bebidas
+                </div>
+
+                <!-- Drink Items -->
+                <div class="menu-item">
+                    <div class="menu-item-content">
+                        <div class="menu-item-header">
+                            <span class="menu-item-name">Coke Lite 600ml</span>
+                            <span class="menu-item-price">$30</span>
+                        </div>
+                        <button class="add-to-cart-btn" onclick="addToCart('Coke Lite 600ml', 30)">
+                            Agregar al Carrito
+                        </button>
+                    </div>
+                </div>
+
+                <div class="menu-item">
+                    <div class="menu-item-content">
+                        <div class="menu-item-header">
+                            <span class="menu-item-name">Pepsi light</span>
+                            <span class="menu-item-price">$35</span>
+                        </div>
+                        <button class="add-to-cart-btn" onclick="addToCart('Pepsi light', 35)">
+                            Agregar al Carrito
+                        </button>
+                    </div>
+                </div>
+
+                <div class="menu-item">
+                    <div class="menu-item-content">
+                        <div class="menu-item-header">
+                            <span class="menu-item-name">Jamaiica</span>
+                            <span class="menu-item-price">$20</span>
+                        </div>
+                        <button class="add-to-cart-btn" onclick="addToCart('Jamaiica', 20)">
+                            Agregar al Carrito
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Additional Restaurant Info -->
+                <div class="restaurant-info">
+                    <div class="operating-hours">
+                        <div>
+                            <u><strong>Martes a Domingo:</strong><br></u>
+                            &nbsp;&nbsp;&nbsp;<u>Tipos de carne:</u><br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1) Pollo<br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2) Milanesa de cerdo empanizada<br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3) Milanesa de cerdo roja (frita)<br><br>
+                            Los <strong><u>Miércoles</u></strong> son de:<br>
+                            Sopa fría - plato $40<br><br>
+                            
+                            <u><strong>Sábado y Domingo:</strong></u><br>
+                            1) Todas las anteriores<br>
+                            2) Relleno negro (pollo) $20<br><br>
+                            Los <strong><u>Sábados</u></strong> contamos con:<br>
+                            Platillos fiesta $50<br>
+                            &nbsp;&nbsp;&nbsp;(Sandwichon, Sopa fría y Arrolladito)<br>
+                            Sandwichon<br>
+                            &nbsp;&nbsp;&nbsp;1)Rebanada grande $40<br>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Install Prompt - Fixed at bottom of page -->
+        <div id="installPrompt" class="install-prompt">
+            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+                <div style="flex: 1; min-width: 200px;">
+                    <div class="install-prompt-title">📱 Instalar Doña Malena</div>
+                    <div class="install-prompt-subtitle">Acceso rápido desde tu pantalla de inicio</div>
+                </div>
+                <div>
+                    <button onclick="installApp()" class="install-btn">
+                        INSTALAR
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Floating Cart Button -->
+        <div class="cart" onclick="showCart()">
+            🛒
+            <div class="cart-count" id="cartCount" style="display: none;">0</div>
+        </div>
+    </div>
+
+    <!-- Cart Modal (will be added via JavaScript) -->
+    <div id="cartModal" style="display: none;"></div>
+
+    <script>
+        // Simple Cart System
+        let cart = [];
+
+        function addToCart(name, price) {
+            // Find if item already exists
+            const existingItem = cart.find(item => item.name === name);
+            
+            if (existingItem) {
+                existingItem.quantity += 1;
+            } else {
+                cart.push({
+                    name: name,
+                    price: price,
+                    quantity: 1
+                });
+            }
+            
+            updateCartDisplay();
+            showNotification('✓ ' + name + ' agregado al carrito');
+        }
+
+        function updateCartDisplay() {
+            const cartCount = document.getElementById('cartCount');
+            const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+            
+            if (totalItems > 0) {
+                cartCount.style.display = 'flex';
+                cartCount.textContent = totalItems;
+            } else {
+                cartCount.style.display = 'none';
+            }
+        }
+
+        function showCart() {
+            if (cart.length === 0) {
+                alert('Tu carrito está vacío. ¡Agrega algunos deliciosos antojitos!');
+                return;
+            }
+            
+            showCartModal();
+        }
+
+        function showCartModal() {
+            const modal = document.getElementById('cartModal');
+            const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            
+            modal.innerHTML = `
+                <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 1rem;">
+                    <div style="background: white; border-radius: 10px; max-width: 400px; width: 100%; max-height: 80vh; overflow-y: auto;">
+                        <div style="padding: 1rem; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">
+                            <h2 style="margin: 0; color: var(--primary-red);">Tu Pedido</h2>
+                            <button onclick="closeCartModal()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer;">×</button>
+                        </div>
+                        <div style="padding: 1rem;">
+                            ${cart.map((item, index) => `
+                                <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0; border-bottom: 1px solid #f0f0f0;">
+                                    <div>
+                                        <strong>${item.name}</strong><br>
+                                        <small>$${item.price} c/u</small>
+                                    </div>
+                                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                        <button onclick="updateQuantity(${index}, -1)" style="background: var(--primary-red); color: white; border: none; border-radius: 50%; width: 25px; height: 25px; cursor: pointer;">-</button>
+                                        <span>${item.quantity}</span>
+                                        <button onclick="updateQuantity(${index}, 1)" style="background: var(--primary-red); color: white; border: none; border-radius: 50%; width: 25px; height: 25px; cursor: pointer;">+</button>
+                                        <strong style="margin-left: 0.5rem;">${item.price * item.quantity}</strong>
+                                    </div>
+                                </div>
+                            `).join('')}
+                            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 2px solid var(--primary-red);">
+                                <div style="display: flex; justify-content: space-between; font-size: 1.2rem; font-weight: bold;">
+                                    <span>Total:</span>
+                                    <span style="color: var(--primary-red);">${total}</span>
+                                </div>
+                            </div>
+                            <div style="margin-top: 1rem;">
+                                <button onclick="proceedToOrder()" style="width: 100%; background: linear-gradient(135deg, var(--primary-red) 0%, var(--secondary-red) 100%); color: white; border: none; padding: 1rem; border-radius: 5px; cursor: pointer; font-weight: 600; font-size: 1.1rem;">
+                                    Realizar Pedido 📱
+                                </button>
+                                <p style="text-align: center; margin-top: 0.5rem; font-size: 0.9rem; color: #666;">
+                                    Te contactaremos por WhatsApp para confirmar tu pedido
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            modal.style.display = 'block';
+        }
+
+        function closeCartModal() {
+            document.getElementById('cartModal').style.display = 'none';
+        }
+
+        function updateQuantity(index, change) {
+            cart[index].quantity += change;
+            if (cart[index].quantity <= 0) {
+                cart.splice(index, 1);
+            }
+            updateCartDisplay();
+            showCartModal(); // Refresh the modal
+        }
+
+        function proceedToOrder() {
+            if (cart.length === 0) return;
+            
+            const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            const orderDetails = cart.map(item => 
+                `${item.quantity}x ${item.name} (${item.price * item.quantity})`
+            ).join('\n');
+            
+            const message = `🌮 *Nuevo pedido - Doña Malena* 🌮\n\n${orderDetails}\n\n💰 *Total: ${total}*\n\n📱 Pedido realizado desde la app web\n⏰ ${new Date().toLocaleString('es-MX')}`;
+            
+            const whatsappUrl = `https://wa.me/5219988467737?text=${encodeURIComponent(message)}`;
+            window.open(whatsappUrl, '_blank');
+            
+            // Clear cart after order
+            cart = [];
+            updateCartDisplay();
+            closeCartModal();
+            
+            alert('¡Gracias! Tu pedido ha sido enviado por WhatsApp. Te contactaremos pronto para confirmar.');
+        }
+
+        function showNotification(message) {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: var(--deep-green);
+                color: white;
+                padding: 1rem;
+                border-radius: 8px;
+                z-index: 3000;
+                font-weight: bold;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            `;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                if (document.body.contains(notification)) {
+                    document.body.removeChild(notification);
+                }
+            }, 2000);
+        }
+
+        // Service Worker Registration
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then((registration) => {
+                        console.log('SW registered: ', registration);
+                    })
+                    .catch((registrationError) => {
+                        console.log('SW registration failed (this is normal in preview): ', registrationError.message);
+                    });
+            });
+        }
+
+        // PWA Installation
+        let deferredPrompt;
+        
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+        });
+
+        function hideInstallPrompt() {
+            // This function is no longer needed but kept for compatibility
+            document.getElementById('installPrompt').style.display = 'none';
+        }
+
+        async function installApp() {
+            if (deferredPrompt) {
+                // Show browser's native install dialog
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                
+                if (outcome === 'accepted') {
+                    showNotification('¡App instalada exitosamente! 🎉');
+                    document.getElementById('installPrompt').style.display = 'none';
+                } else {
+                    showNotification('Instalación cancelada. Puedes instalar más tarde.');
+                }
+                deferredPrompt = null;
+            } else {
+                // Fallback instructions for different browsers
+                showInstallInstructions();
+            }
+        }
+
+        function showInstallInstructions() {
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+            const isAndroid = /Android/.test(navigator.userAgent);
+            
+            let instructions = '';
+            
+            if (isIOS) {
+                instructions = `📱 Para instalar en iPhone/iPad:
+                
+1. Toca el botón de compartir (⬆️) en Safari
+2. Selecciona "Agregar a pantalla de inicio"
+3. Toca "Agregar"`;
+            } else if (isAndroid) {
+                instructions = `📱 Para instalar en Android:
+                
+1. Toca el menú (⋮) en tu navegador
+2. Selecciona "Agregar a pantalla de inicio"
+3. Toca "Agregar"`;
+            } else {
+                instructions = `💻 Para instalar:
+                
+1. Busca el ícono de instalar (⬇️) en la barra de direcciones
+2. Haz clic en "Instalar"
+3. Confirma la instalación`;
+            }
+            
+            alert(instructions);
+        }
+
+        // Online/Offline Detection
+        const offlineIndicator = document.getElementById('offlineIndicator');
+
+        function updateOnlineStatus() {
+            if (navigator.onLine) {
+                offlineIndicator.classList.remove('show');
+            } else {
+                offlineIndicator.classList.add('show');
+            }
+        }
+
+        if (window.location.hostname !== 'www.claudeusercontent.com') {
+            window.addEventListener('online', updateOnlineStatus);
+            window.addEventListener('offline', updateOnlineStatus);
+        }
+        updateOnlineStatus();
+
+        // Restaurant Status
+        function updateRestaurantStatus() {
+            const statusIndicator = document.getElementById('statusIndicator');
+            const now = new Date();
+            const day = now.getDay();
+            const hour = now.getHours();
+            const minute = now.getMinutes();
+            const time = hour + (minute / 60);
+
+            const isOpen = day !== 1 && time >= 6.5 && time <= 12.0;
+
+            if (isOpen) {
+                statusIndicator.textContent = 'ABIERTO';
+                statusIndicator.style.background = 'var(--golden-yellow)';
+            } else {
+                statusIndicator.textContent = 'CERRADO';
+                statusIndicator.style.background = '#ff9800';
+            }
+        }
+
+        updateRestaurantStatus();
+        setInterval(updateRestaurantStatus, 60000);
+
+        // Prevent zoom on double tap (iOS Safari)
+        let lastTouchEnd = 0;
+        document.addEventListener('touchend', function (event) {
+            const now = (new Date()).getTime();
+            if (now - lastTouchEnd <= 300) {
+                event.preventDefault();
+            }
+            lastTouchEnd = now;
+        }, false);
+    </script>
+</body>
+</html>
