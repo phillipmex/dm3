@@ -255,39 +255,93 @@
             font-weight: bold;
         }
 
-        /* Install prompt styling */
+        /* Install prompt styling - Floating at bottom */
         .install-prompt {
-            position: static;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
             background: #DC2626;
             color: white;
-            padding: 20px;
-            margin: 1rem 0.75rem;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-            display: block;
+            padding: 15px 20px;
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.3);
+            z-index: 999;
+            transform: translateY(100%);
+            transition: transform 0.3s ease;
+        }
+
+        .install-prompt.show {
+            transform: translateY(0);
+        }
+
+        .install-prompt-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            max-width: 1200px;
+            margin: 0 auto;
         }
 
         .install-prompt-title {
             font-weight: bold;
-            font-size: 1.25rem;
-            margin-bottom: 0.5rem;
+            font-size: 1rem;
+            margin-bottom: 0.25rem;
         }
 
         .install-prompt-subtitle {
-            font-size: 1rem;
+            font-size: 0.85rem;
             opacity: 90%;
         }
 
+        .install-prompt-buttons {
+            display: flex;
+            gap: 0.5rem;
+            flex-shrink: 0;
+        }
+
         .install-btn {
-            padding: 1rem 2rem;
+            padding: 0.75rem 1.5rem;
             background: white;
             color: #DC2626;
             border: none;
-            border-radius: 8px;
+            border-radius: 6px;
             font-weight: bold;
-            font-size: 1.125rem;
+            font-size: 0.9rem;
             cursor: pointer;
-            min-width: 120px;
+            min-width: 100px;
+            transition: all 0.2s ease;
+        }
+
+        .install-btn:hover {
+            background: #f8f8f8;
+            transform: translateY(-1px);
+        }
+
+        .dismiss-btn {
+            padding: 0.75rem 1rem;
+            background: transparent;
+            color: white;
+            border: 1px solid rgba(255,255,255,0.4);
+            border-radius: 6px;
+            font-weight: 500;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .dismiss-btn:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        /* Adjust cart position when install prompt is visible */
+        .cart {
+            bottom: 1rem;
+            transition: bottom 0.3s ease;
+        }
+
+        .cart.adjust-for-prompt {
+            bottom: 90px;
         }
 
         .offline-indicator {
@@ -364,15 +418,18 @@
 
             .install-prompt-content {
                 flex-direction: column;
-                gap: 1rem;
+                text-align: center;
+                gap: 0.75rem;
             }
 
             .install-prompt-buttons {
-                align-self: stretch;
+                justify-content: center;
+                width: 100%;
             }
 
-            .install-btn, .cancel-btn {
+            .install-btn, .dismiss-btn {
                 flex: 1;
+                max-width: 120px;
             }
             
             .section-header {
@@ -697,19 +754,19 @@
             </section>
         </main>
 
-        <!-- Install Prompt - Hidden after first visit -->
-        <div id="installPrompt" class="install-prompt" style="display: none;">
-            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
-                <div style="flex: 1; min-width: 200px;">
-                    <div class="install-prompt-title">📱 Instalar Doña Malena</div>
-                    <div class="install-prompt-subtitle">Acceso rápido desde tu pantalla de inicio</div>
+        <!-- Install Prompt - Floating at bottom -->
+        <div id="installPrompt" class="install-prompt">
+            <div class="install-prompt-content">
+                <div style="flex: 1; min-width: 180px;">
+                    <div class="install-prompt-title">📱 Instalar App</div>
+                    <div class="install-prompt-subtitle">Acceso rápido desde tu inicio</div>
                 </div>
-                <div style="display: flex; gap: 0.5rem;">
+                <div class="install-prompt-buttons">
                     <button onclick="installApp()" class="install-btn">
-                        INSTALAR
+                        Instalar
                     </button>
-                    <button onclick="hideInstallPrompt()" class="install-btn" style="background: transparent; color: white; border: 1px solid white;">
-                        Más tarde
+                    <button onclick="hideInstallPrompt()" class="dismiss-btn">
+                        ✕
                     </button>
                 </div>
             </div>
@@ -898,25 +955,38 @@
         function checkFirstVisit() {
             const hasVisited = localStorage.getItem('dona-malena-visited');
             const installPrompt = document.getElementById('installPrompt');
+            const cartButton = document.querySelector('.cart');
             
             if (hasVisited) {
                 // Hide install prompt for returning visitors
-                installPrompt.style.display = 'none';
+                installPrompt.classList.remove('show');
+                cartButton.classList.remove('adjust-for-prompt');
             } else {
                 // Mark as visited for future visits
                 localStorage.setItem('dona-malena-visited', 'true');
-                // Keep install prompt visible for first-time visitors
-                installPrompt.style.display = 'block';
+                // Show install prompt for first-time visitors with animation
+                setTimeout(() => {
+                    installPrompt.classList.add('show');
+                    cartButton.classList.add('adjust-for-prompt');
+                }, 1000); // Show after 1 second
             }
         }
 
         function hideInstallPrompt() {
-            document.getElementById('installPrompt').style.display = 'none';
+            const installPrompt = document.getElementById('installPrompt');
+            const cartButton = document.querySelector('.cart');
+            
+            installPrompt.classList.remove('show');
+            cartButton.classList.remove('adjust-for-prompt');
+            
             // Also mark as visited when manually dismissed
             localStorage.setItem('dona-malena-visited', 'true');
         }
 
         async function installApp() {
+            const installPrompt = document.getElementById('installPrompt');
+            const cartButton = document.querySelector('.cart');
+            
             if (deferredPrompt) {
                 // Show browser's native install dialog
                 deferredPrompt.prompt();
@@ -924,12 +994,14 @@
                 
                 if (outcome === 'accepted') {
                     showNotification('¡App instalada exitosamente! 🎉');
-                    document.getElementById('installPrompt').style.display = 'none';
+                    installPrompt.classList.remove('show');
+                    cartButton.classList.remove('adjust-for-prompt');
                     localStorage.setItem('dona-malena-visited', 'true');
                 } else {
                     showNotification('Instalación cancelada. Puedes instalar más tarde.');
                     // Hide prompt after cancellation too
-                    document.getElementById('installPrompt').style.display = 'none';
+                    installPrompt.classList.remove('show');
+                    cartButton.classList.remove('adjust-for-prompt');
                     localStorage.setItem('dona-malena-visited', 'true');
                 }
                 deferredPrompt = null;
