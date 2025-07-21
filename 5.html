@@ -1,0 +1,967 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doña Malena - Auténtica Comida Mexicana</title>
+    <style>
+        :root {
+            --primary-red: #FF0000;
+            --secondary-red: #CC0000;
+            --deep-green: #228B22;
+            --golden-yellow: #FFD700;
+            --cream-white: #FFF8DC;
+            --dark-text: #333;
+            --shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            line-height: 1.6;
+            color: var(--dark-text);
+            background: linear-gradient(135deg, var(--cream-white) 0%, #ffffff 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 100%;
+            width: 100%;
+            margin: 0;
+            background: white;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary-red) 0%, var(--secondary-red) 100%);
+            color: white;
+            padding: 1rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header h1 {
+            font-family: 'Dancing Script', cursive;
+            font-size: 2.5rem;
+            font-weight: 700;
+            position: relative;
+            z-index: 1;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            position: relative;
+            z-index: 1;
+            opacity: 0.9;
+            margin-top: 0.5rem;
+        }
+
+        .restaurant-info {
+            background: linear-gradient(135deg, var(--deep-green) 0%, #1a6b1a 100%);
+            color: white;
+            padding: 0.875rem;
+            margin: 0.75rem;
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+        }
+
+        .operating-hours {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .status-open {
+            background: var(--golden-yellow);
+            color: var(--dark-text);
+            padding: 0.25rem 0.5rem;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .menu-section {
+            padding: 1rem;
+            display: block;
+        }
+
+        .menu-item {
+            background: lightblue;
+            margin-bottom: 1rem;
+            padding: 1.25rem;
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .menu-item-content {
+            padding: 0;
+        }
+
+        .menu-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            gap: 1rem;
+        }
+
+        .menu-item-name {
+            font-weight: 600;
+            font-size: 1.25rem;
+            color: var(--primary-red);
+            flex: 1;
+            line-height: 1.3;
+        }
+
+        .menu-item-price {
+            font-weight: 700;
+            font-size: 1.375rem;
+            color: var(--primary-red);
+            white-space: nowrap;
+        }
+
+        .add-to-cart-btn {
+            display: block;
+            margin: 0 auto;
+            background: var(--primary-red);
+            color: white;
+            border: none;
+            padding: 1rem 2.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            width: 100%;
+            max-width: 280px;
+        }
+
+        .add-to-cart-btn:hover {
+            background: var(--secondary-red);
+            transform: translateY(-1px);
+        }
+
+        .section-header {
+            background: linear-gradient(135deg, var(--deep-green) 0%, #1a6b1a 100%);
+            color: white;
+            padding: 1rem;
+            margin: 1rem 0.75rem 0.5rem 0.75rem;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 1.25rem;
+            font-weight: 600;
+            box-shadow: var(--shadow);
+        }
+
+        .cart {
+            position: fixed;
+            bottom: 1rem;
+            right: 1rem;
+            background: var(--primary-red);
+            color: white;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: var(--shadow);
+            transition: all 0.3s ease;
+            z-index: 1000;
+            font-size: 1.25rem;
+        }
+
+        .cart:hover {
+            transform: scale(1.05);
+        }
+
+        .cart-count {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            background: var(--golden-yellow);
+            color: var(--dark-text);
+            border-radius: 50%;
+            width: 22px;
+            height: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>Doña Malena</h1>
+            <p>Auténtica Comida Mexicana</p>
+        </header>
+
+        <div class="restaurant-info">
+            <div class="operating-hours">
+                <div>
+                    <strong>🕐 Horarios:</strong><br>
+                    Martes a Domingo: 6:30 AM - 12:00 PM<br>
+                    <em>Lunes: CERRADO</em>
+                </div>
+                <div class="status-open" id="statusIndicator">ABIERTO</div>
+            </div>
+            <p style="margin-top: 0.5rem;">📍 <strong>Solo para recoger</strong> - No contamos con servicio a domicilio</p>
+        </div>
+
+        <main>
+            <section class="menu-section" id="all-menu">
+                <div class="menu-item">
+                    <div class="menu-item-content">
+                        <div class="menu-item-header">
+                            <span class="menu-item-name">Empanadas con carne</span>
+                            <span class="menu-item-price">$8</span>
+                        </div>
+                        <button class="add-to-cart-btn" onclick="addToCart('Empanadas con carne', 8)">
+                            Agregar al Carrito
+                        </button>
+                    </div>
+                </div>
+
+                <div class="menu-item">
+                    <div class="menu-item-content">
+                        <div class="menu-item-header">
+                            <span class="menu-item-name">Empanadas con Q.hebra</span>
+                            <span class="menu-item-price">$10</span>
+                        </div>
+                        <button class="add-to-cart-btn" onclick="addToCart('Empanadas con Q.hebra', 10)">
+                            Agregar al Carrito
+                        </button>
+                    </div>
+                </div>
+
+                <div class="menu-item">
+                    <div class="menu-item-content">
+                        <div class="menu-item-header">
+                            <span class="menu-item-name">Panuchós</span>
+                            <span class="menu-item-price">$18</span>
+                        </div>
+                        <button class="add-to-cart-btn" onclick="addToCart('Panuchós', 18)">
+                            Agregar al Carrito
+                        </button>
+                    </div>
+                </div>
+
+                <div class="menu-item">
+                    <div class="menu-item-content">
+                        <div class="menu-item-header">
+                            <span class="menu-item-name">Salbutes</span>
+                            <span class="menu-item-price">$18</span>
+                        </div>
+                        <button class="add-to-cart-btn" onclick="addToCart('Salbutes', 18)">
+                            Agregar al Carrito
+                        </button>
+                    </div>
+                </div>
+
+                <div class="menu-item">
+                    <div class="menu-item-content">
+                        <div class="menu-item-header">
+                            <span class="menu-item-name">Sopes</span>
+                            <span class="menu-item-price">$25</span>
+                        </div>
+                        <button class="add-to-cart-btn" onclick="addToCart('Sopes', 25)">
+                            Agregar al Carrito
+                        </button>
+                    </div>
+                </div>
+
+                <div class="menu-item">
+                    <div class="menu-item-content">
+                        <div class="menu-item-header">
+                            <span class="menu-item-name">Polcanes sencillos</span>
+                            <span class="menu-item-price">$8</span>
+                        </div>
+                        <button class="add-to-cart-btn" onclick="addToCart('Polcanes sencillos', 8)">
+                            Agregar al Carrito
+                        </button>
+                    </div>
+                </div>
+
+                <div class="menu-item">
+                    <div class="menu-item-content">
+                        <div class="menu-item-header">
+                            <span class="menu-item-name">Polcanes rellenos con carne</span>
+                            <span class="menu-item-price">$20</span>
+                        </div>
+                        <button class="add-to-cart-btn" onclick="addToCart('Polcanes rellenos con carne', 20)">
+                            Agregar al Carrito
+                        </button>
+                    </div>
+                </div>
+
+                <div class="menu-item">
+                    <div class="menu-item-content">
+                        <div class="menu-item-header">
+                            <span class="menu-item-name">Polcanes rellenos con carne y queso</span>
+                            <span class="menu-item-price">$25</span>
+                        </div>
+                        <button class="add-to-cart-btn" onclick="addToCart('Polcanes rellenos con carne y queso', 25)">
+                            Agregar al Carrito
+                        </button>
+                    </div>
+                </div>
+
+                <div class="menu-item">
+                    <div class="menu-item-content">
+                        <div class="menu-item-header">
+                            <span class="menu-item-name">Tortas (Bolillo)</span>
+                            <span class="menu-item-price">$35</span>
+                        </div>
+                        <button class="add-to-cart-btn" onclick="addToCart('Tortas (Bolillo)', 35)">
+                            Agregar al Carrito
+                        </button>
+                    </div>
+                </div>
+
+                <div class="menu-item">
+                    <div class="menu-item-content">
+                        <div class="menu-item-header">
+                            <span class="menu-item-name">Tortas especiales(jamón, queso y pollo)</span>
+                            <span class="menu-item-price">$38</span>
+                        </div>
+                        <button class="add-to-cart-btn" onclick="addToCart('Tortas especiales(jamón, queso y pollo)', 38)">
+                            Agregar al Carrito
+                        </button>
+                    </div>
+                </div>
+
+                <div class="menu-item">
+                    <div class="menu-item-content">
+                        <div class="menu-item-header">
+                            <span class="menu-item-name">Sandwiches</span>
+                            <span class="menu-item-price">$25</span>
+                        </div>
+                        <button class="add-to-cart-btn" onclick="addToCart('Sandwiches', 25)">
+                            Agregar al Carrito
+                        </button>
+                    </div>
+                </div>
+
+                <div class="menu-item">
+                    <div class="menu-item-content">
+                        <div class="menu-item-header">
+                            <span class="menu-item-name">Sandwiches especiales</span>
+                            <span class="menu-item-price">$28</span>
+                        </div>
+                        <button class="add-to-cart-btn" onclick="addToCart('Sandwiches especiales', 28)">
+                            Agregar al Carrito
+                        </button>
+                    </div>
+                </div>
+
+                <div class="menu-item">
+                    <div class="menu-item-content">
+                        <div class="menu-item-header">
+                            <span class="menu-item-name">Hamburguesas sencilla</span>
+                            <span class="menu-item-price">$55</span>
+                        </div>
+                        <button class="add-to-cart-btn" onclick="addToCart('Hamburguesas sencilla', 55)">
+                            Agregar al Carrito
+                        </button>
+                    </div>
+                </div>
+
+                <div class="menu-item">
+                    <div class="menu-item-content">
+                        <div class="menu-item-header">
+                            <span class="menu-item-name">Hamburguesas con papas</span>
+                            <span class="menu-item-price">$65</span>
+                        </div>
+                        <button class="add-to-cart-btn" onclick="addToCart('Hamburguesas con papas', 65)">
+                            Agregar al Carrito
+                        </button>
+                    </div>
+                </div>
+
+                <div class="menu-item">
+                    <div class="menu-item-content">
+                        <div class="menu-item-header">
+                            <span class="menu-item-name">Burritacos</span>
+                            <span class="menu-item-price">$20</span>
+                        </div>
+                        <button class="add-to-cart-btn" onclick="addToCart('Burritacos', 20)">
+                            Agregar al Carrito
+                        </button>
+                    </div>
+                </div>
+
+                <div class="menu-item">
+                    <div class="menu-item-content">
+                        <div class="menu-item-header">
+                            <span class="menu-item-name">Burritas</span>
+                            <span class="menu-item-price">$15</span>
+                        </div>
+                        <button class="add-to-cart-btn" onclick="addToCart('Burritas', 15)">
+                            Agregar al Carrito
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="section-header">
+                    🥤 Bebidas
+                </div>
+
+                <div class="menu-item">
+                    <div class="menu-item-content">
+                        <div class="menu-item-header">
+                            <span class="menu-item-name">Coke Lite 600ml</span>
+                            <span class="menu-item-price">$30</span>
+                        </div>
+                        <button class="add-to-cart-btn" onclick="addToCart('Coke Lite 600ml', 30)">
+                            Agregar al Carrito
+                        </button>
+                    </div>
+                </div>
+
+                <div class="menu-item">
+                    <div class="menu-item-content">
+                        <div class="menu-item-header">
+                            <span class="menu-item-name">Pepsi light</span>
+                            <span class="menu-item-price">$35</span>
+                        </div>
+                        <button class="add-to-cart-btn" onclick="addToCart('Pepsi light', 35)">
+                            Agregar al Carrito
+                        </button>
+                    </div>
+                </div>
+
+                <div class="menu-item">
+                    <div class="menu-item-content">
+                        <div class="menu-item-header">
+                            <span class="menu-item-name">Jamaica</span>
+                            <span class="menu-item-price">$20</span>
+                        </div>
+                        <button class="add-to-cart-btn" onclick="addToCart('Jamaica', 20)">
+                            Agregar al Carrito
+                        </button>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <div class="cart" onclick="showCart()">
+            🛒
+            <div class="cart-count" id="cartCount" style="display: none;">0</div>
+        </div>
+    </div>
+
+    <div id="cartModal" style="display: none;"></div>
+
+    <script>
+        console.log('=== JavaScript loading ===');
+        
+        // Cart System
+        let cart = [];
+
+        function showNotification(message) {
+            console.log('Showing notification:', message);
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: var(--deep-green);
+                color: white;
+                padding: 1rem;
+                border-radius: 8px;
+                z-index: 3000;
+                font-weight: bold;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            `;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                if (document.body.contains(notification)) {
+                    document.body.removeChild(notification);
+                }
+            }, 2000);
+        }
+
+        function updateCartDisplay() {
+            const cartCount = document.getElementById('cartCount');
+            const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+            
+            if (totalItems > 0) {
+                cartCount.style.display = 'flex';
+                cartCount.textContent = totalItems;
+            } else {
+                cartCount.style.display = 'none';
+            }
+        }
+
+        function addToCart(name, price) {
+            console.log('Adding to cart:', name, price);
+            const existingItem = cart.find(item => item.name === name);
+            
+            if (existingItem) {
+                existingItem.quantity += 1;
+            } else {
+                cart.push({
+                    name: name,
+                    price: price,
+                    quantity: 1
+                });
+            }
+            
+            updateCartDisplay();
+            showNotification('✓ ' + name + ' agregado al carrito');
+        }
+
+        function closeCartModal() {
+            console.log('closeCartModal called');
+            document.getElementById('cartModal').style.display = 'none';
+        }
+
+        function updateQuantity(index, change) {
+            console.log('updateQuantity called:', index, change);
+            cart[index].quantity += change;
+            if (cart[index].quantity <= 0) {
+                cart.splice(index, 1);
+            }
+            updateCartDisplay();
+            showCartModal();
+        }
+
+        function showCartModal() {
+            console.log('showCartModal called');
+            const modal = document.getElementById('cartModal');
+            const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            
+            modal.innerHTML = `
+                <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 1rem;">
+                    <div style="background: white; border-radius: 10px; max-width: 400px; width: 100%; max-height: 80vh; overflow-y: auto;">
+                        <div style="padding: 1rem; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">
+                            <h2 style="margin: 0; color: var(--primary-red);">Tu Pedido</h2>
+                            <button onclick="closeCartModal()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer;">×</button>
+                        </div>
+                        <div style="padding: 1rem;">
+                            ${cart.map((item, index) => `
+                                <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0; border-bottom: 1px solid #f0f0f0;">
+                                    <div>
+                                        <strong>${item.name}</strong><br>
+                                        <small>${item.price} c/u</small>
+                                    </div>
+                                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                        <button onclick="updateQuantity(${index}, -1)" style="background: var(--primary-red); color: white; border: none; border-radius: 50%; width: 25px; height: 25px; cursor: pointer;">-</button>
+                                        <span>${item.quantity}</span>
+                                        <button onclick="updateQuantity(${index}, 1)" style="background: var(--primary-red); color: white; border: none; border-radius: 50%; width: 25px; height: 25px; cursor: pointer;">+</button>
+                                        <strong style="margin-left: 0.5rem;">${item.price * item.quantity}</strong>
+                                    </div>
+                                </div>
+                            `).join('')}
+                            
+                            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 2px solid var(--primary-red);">
+                                <div style="display: flex; justify-content: space-between; font-size: 1.2rem; font-weight: bold;">
+                                    <span>Total:</span>
+                                    <span style="color: var(--primary-red);">${total}</span>
+                                </div>
+                            </div>
+                            
+                            <div style="margin-top: 1rem;">
+                                <button onclick="beginOrderProcess()" style="width: 100%; background: linear-gradient(135deg, var(--primary-red) 0%, var(--secondary-red) 100%); color: white; border: none; padding: 1rem; border-radius: 5px; cursor: pointer; font-weight: 600; font-size: 1.1rem;">
+                                    Enviar Pedido por WhatsApp 📱
+                                </button>
+                                <p style="text-align: center; margin-top: 0.5rem; font-size: 0.9rem; color: #666;">
+                                    Te pediremos tu nombre antes de enviar
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            modal.style.display = 'block';
+        }
+
+        function showCart() {
+            console.log('showCart called');
+            if (cart.length === 0) {
+                alert('Tu carrito está vacío. ¡Agrega algunos deliciosos antojitos!');
+                return;
+            }
+            
+            showCartModal();
+        }
+
+        function beginOrderProcess() {
+            console.log('=== beginOrderProcess called ===');
+            
+            if (cart.length === 0) {
+                console.log('Cart is empty, returning');
+                return;
+            }
+            
+            console.log('Cart has items:', cart.length);
+            
+            // Close cart modal first
+            closeCartModal();
+            console.log('Cart modal closed');
+            
+            // Add a small delay to ensure modal is closed, then create overlay
+            setTimeout(() => {
+                console.log('Creating name input overlay after delay');
+                createNameInputScreen();
+            }, 300);
+        }
+
+        function createNameInputScreen() {
+            console.log('=== createNameInputScreen called ===');
+            
+            try {
+                // Remove any existing overlay
+                const existingOverlay = document.getElementById('nameInputOverlay');
+                if (existingOverlay) {
+                    console.log('Removing existing overlay');
+                    existingOverlay.remove();
+                }
+                
+                console.log('Creating new overlay element');
+                
+                // Create full-screen overlay
+                const overlay = document.createElement('div');
+                overlay.id = 'nameInputOverlay';
+                overlay.style.cssText = `
+                    position: fixed !important;
+                    top: 0 !important;
+                    left: 0 !important;
+                    right: 0 !important;
+                    bottom: 0 !important;
+                    width: 100vw !important;
+                    height: 100vh !important;
+                    background: rgba(0,0,0,0.95) !important;
+                    z-index: 999999 !important;
+                    display: flex !important;
+                    align-items: center !important;
+                    justify-content: center !important;
+                    padding: 1rem !important;
+                    font-family: Arial, sans-serif !important;
+                `;
+                
+                console.log('Setting overlay innerHTML');
+                
+                // Create the form content
+                overlay.innerHTML = `
+                    <div style="background: white !important; border-radius: 15px !important; padding: 2rem !important; max-width: 400px !important; width: 90% !important; text-align: center !important; box-shadow: 0 10px 30px rgba(0,0,0,0.5) !important;">
+                        <div style="font-size: 3rem !important; margin-bottom: 1rem !important;">🌮</div>
+                        <h2 style="color: #FF0000 !important; margin-bottom: 0.5rem !important; font-size: 1.5rem !important;">Doña Malena</h2>
+                        <p style="color: #666 !important; margin-bottom: 1.5rem !important; font-size: 1rem !important;">Para procesar tu pedido, necesitamos tu nombre:</p>
+                        
+                        <input 
+                            type="text" 
+                            id="customerNameOverlay" 
+                            placeholder="Tu nombre completo"
+                            autocomplete="name"
+                            style="
+                                width: 100% !important; 
+                                padding: 1rem !important; 
+                                border: 2px solid #ddd !important; 
+                                border-radius: 8px !important; 
+                                font-size: 1.1rem !important; 
+                                box-sizing: border-box !important;
+                                margin-bottom: 1rem !important;
+                                text-align: center !important;
+                            "
+                        >
+                        
+                        <div style="display: flex !important; gap: 0.5rem !important; margin-top: 1rem !important;">
+                            <button 
+                                id="cancelNameBtn"
+                                style="
+                                    flex: 1 !important; 
+                                    background: #ccc !important; 
+                                    color: #333 !important; 
+                                    border: none !important; 
+                                    padding: 1rem !important; 
+                                    border-radius: 8px !important; 
+                                    cursor: pointer !important; 
+                                    font-size: 1rem !important;
+                                    font-weight: 500 !important;
+                                "
+                            >
+                                Cancelar
+                            </button>
+                            <button 
+                                id="confirmNameBtn"
+                                style="
+                                    flex: 2 !important; 
+                                    background: linear-gradient(135deg, #FF0000 0%, #CC0000 100%) !important; 
+                                    color: white !important; 
+                                    border: none !important; 
+                                    padding: 1rem !important; 
+                                    border-radius: 8px !important; 
+                                    cursor: pointer !important; 
+                                    font-weight: 600 !important; 
+                                    font-size: 1rem !important;
+                                "
+                            >
+                                Enviar Pedido 📱
+                            </button>
+                        </div>
+                    </div>
+                `;
+                
+                console.log('Adding overlay to document body');
+                
+                // Add to page
+                document.body.appendChild(overlay);
+                
+                console.log('Overlay added to body, setting up event listeners');
+                
+                // Set up event listeners using direct element references
+                const cancelBtn = document.getElementById('cancelNameBtn');
+                const confirmBtn = document.getElementById('confirmNameBtn');
+                const nameInput = document.getElementById('customerNameOverlay');
+                
+                if (cancelBtn) {
+                    cancelBtn.addEventListener('click', function() {
+                        console.log('Cancel button clicked');
+                        cancelNameScreen();
+                    });
+                } else {
+                    console.error('Cancel button not found!');
+                }
+                
+                if (confirmBtn) {
+                    confirmBtn.addEventListener('click', function() {
+                        console.log('Confirm button clicked');
+                        processNameAndOrder();
+                    });
+                } else {
+                    console.error('Confirm button not found!');
+                }
+                
+                // Focus on input and set up keyboard handling
+                if (nameInput) {
+                    console.log('Setting up name input event listeners');
+                    
+                    // Focus after a short delay
+                    setTimeout(() => {
+                        nameInput.focus();
+                        console.log('Input focused');
+                    }, 500);
+                    
+                    // Handle Enter key
+                    nameInput.addEventListener('keypress', function(e) {
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            console.log('Enter key pressed');
+                            processNameAndOrder();
+                        }
+                    });
+                    
+                    // Handle input changes
+                    nameInput.addEventListener('input', function() {
+                        // Reset any error styling
+                        this.style.borderColor = '#ddd';
+                        this.style.backgroundColor = 'white';
+                    });
+                } else {
+                    console.error('Name input element not found!');
+                }
+                
+                console.log('Name input screen created successfully');
+                
+            } catch (error) {
+                console.error('Error creating name input screen:', error);
+                
+                // Fallback to basic prompt if overlay fails
+                console.log('Falling back to prompt');
+                setTimeout(() => {
+                    const name = prompt('Por favor, ingresa tu nombre para el pedido:');
+                    if (name && name.trim()) {
+                        sendOrderToWhatsApp(name.trim());
+                    } else {
+                        showCart();
+                    }
+                }, 100);
+            }
+        }
+
+        function cancelNameScreen() {
+            console.log('=== cancelNameScreen called ===');
+            
+            // Remove overlay
+            const overlay = document.getElementById('nameInputOverlay');
+            if (overlay) {
+                console.log('Removing overlay');
+                overlay.remove();
+            } else {
+                console.log('No overlay found to remove');
+            }
+            
+            // Show cart again
+            console.log('Showing cart again');
+            showCart();
+        }
+
+        function processNameAndOrder() {
+            console.log('=== processNameAndOrder called ===');
+            
+            const nameInput = document.getElementById('customerNameOverlay');
+            const customerName = nameInput ? nameInput.value.trim() : '';
+            
+            console.log('Customer name from overlay:', customerName);
+            
+            // Validate name
+            if (!customerName) {
+                console.log('Name is empty, showing error');
+                
+                if (nameInput) {
+                    // Show error styling
+                    nameInput.style.borderColor = '#FF0000';
+                    nameInput.style.borderWidth = '3px';
+                    nameInput.style.backgroundColor = '#ffe6e6';
+                    nameInput.placeholder = '❗ Tu nombre es obligatorio';
+                    nameInput.focus();
+                    
+                    // Also show an alert as backup
+                    alert('Por favor ingresa tu nombre para continuar');
+                }
+                
+                return; // Don't proceed without name
+            }
+            
+            console.log('Name validated, processing order for:', customerName);
+            
+            // Remove overlay
+            const overlay = document.getElementById('nameInputOverlay');
+            if (overlay) {
+                console.log('Removing overlay before processing order');
+                overlay.remove();
+            }
+            
+            // Process the order with the name
+            sendOrderToWhatsApp(customerName);
+        }
+
+        function sendOrderToWhatsApp(customerName) {
+            console.log('=== sendOrderToWhatsApp called for:', customerName);
+            
+            if (cart.length === 0) {
+                console.log('Cart is empty, cannot send order');
+                return;
+            }
+            
+            // Process the order
+            const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            const orderDetails = cart.map(item => 
+                `${item.quantity}x ${item.name} (${item.price * item.quantity})`
+            ).join('\n');
+            
+            const message = `🌮 *PEDIDO #${Date.now().toString().slice(-6)} - DOÑA MALENA* 🌮\n\n👤 *Cliente:* ${customerName}\n📱 *Teléfono:* [Automático desde WhatsApp]\n\n📋 *PEDIDO:*\n${orderDetails}\n\n💰 *TOTAL: ${total} MXN*\n\n🕐 *Hora del pedido:* ${new Date().toLocaleString('es-MX')}\n📲 *Origen:* App Web\n\n✅ *Confirme este pedido respondiendo SI*\n⏰ *Tiempo estimado: 15-20 min*`;
+            
+            console.log('Opening WhatsApp with message');
+            
+            // WhatsApp URLs
+            const whatsappAppUrl = `whatsapp://send?phone=5219988467737&text=${encodeURIComponent(message)}`;
+            const whatsappWebUrl = `https://wa.me/5219988467737?text=${encodeURIComponent(message)}`;
+            
+            // Mobile detection
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            
+            try {
+                if (isMobile) {
+                    console.log('Mobile detected - trying app first');
+                    // Try app first on mobile
+                    window.location.href = whatsappAppUrl;
+                    
+                    // Fallback after delay
+                    setTimeout(() => {
+                        if (!document.hidden) {
+                            console.log('Fallback to web version');
+                            window.open(whatsappWebUrl, '_blank');
+                        }
+                    }, 1500);
+                } else {
+                    console.log('Desktop - opening web version');
+                    window.open(whatsappWebUrl, '_blank');
+                }
+            } catch (error) {
+                console.error('WhatsApp error:', error);
+                window.open(whatsappWebUrl, '_blank');
+            }
+            
+            // Clear cart
+            cart = [];
+            updateCartDisplay();
+            
+            // Show success message
+            showNotification(`¡Gracias ${customerName}! Tu pedido fue enviado por WhatsApp.`);
+        }
+
+        // Restaurant Status
+        function updateRestaurantStatus() {
+            const statusIndicator = document.getElementById('statusIndicator');
+            const now = new Date();
+            const day = now.getDay();
+            const hour = now.getHours();
+            const minute = now.getMinutes();
+            const time = hour + (minute / 60);
+
+            const isOpen = day !== 1 && time >= 6.5 && time <= 12.0;
+
+            if (isOpen) {
+                statusIndicator.textContent = 'ABIERTO';
+                statusIndicator.style.background = 'var(--golden-yellow)';
+            } else {
+                statusIndicator.textContent = 'CERRADO';
+                statusIndicator.style.background = '#ff9800';
+            }
+        }
+
+        // Initialize
+        updateRestaurantStatus();
+        setInterval(updateRestaurantStatus, 60000);
+
+        console.log('=== All functions loaded successfully ===');
+    </script>
+                    
+                    // Handle Enter key
+                    nameInput.addEventListener('keypress', function(e) {
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            console.log('Enter key pressed');
+                            processNameAndOrder();
+                        }
+                    });
+                    
+                    // Handle input changes
+                    nameInput.addEventListener('input', function() {
+                        // Reset any error styling
+                        this.style.borderColor = '#ddd';
+                        this.style.backgroundColor = 'white';
+                    });
+                } else {
+                    console.error('Name input element not found!');
+                }
+                
+                console.log('Name input screen created successfully');
+                
+            } catch (error) {
+                console.error('Error creating name input screen:', error);
+                
+                // Fallback to basic prompt if overlay fails
+                console.log('Falling back to prompt');
+                setTimeout(() => {
+                    const name = prompt('Por favor, ingresa tu nombre para el pedido:');
+                    if (name && name.trim()) {
+                        sendOrderToWhatsApp(name.trim());
+                    } else {
+                        showCart();
