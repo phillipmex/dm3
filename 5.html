@@ -4,6 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Doña Malena - Auténtica Comida Mexicana</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#FF0000">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Doña Malena">
+    
+    <!-- PWA Manifest (inline to avoid file dependency) -->
+    <link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiRG/Drm9h4oCZIE1hbGVuYSAtIEF1dMOpbnRpY2EgQ29taWRhIE1leGljYW5hIiwic2hvcnRfbmFtZSI6IkRvw7FhIE1hbGVuYSIsImRlc2NyaXB0aW9uIjoiQXV0w6ludGljYSBjb21pZGEgbWV4aWNhbmEgLSBTb2xvIHBhcmEgcmVjb2dlciIsInN0YXJ0X3VybCI6Ii8iLCJkaXNwbGF5Ijoic3RhbmRhbG9uZSIsIm9yaWVudGF0aW9uIjoicG9ydHJhaXQiLCJiYWNrZ3JvdW5kX2NvbG9yIjoiI2ZmZmZmZiIsInRoZW1lX2NvbG9yIjoiI0ZGMDAwMCIsImljb25zIjpbeyJzcmMiOiJkYXRhOmltYWdlL3N2Zyt4bWw7YmFzZTY0LFBITjJaeUI0Yld4dWN6MGlhSFIwY0RvdkwzZDNkeTUzTXk1dmNtY3ZNakF3TUM5emRtY2lJSFpwWlhkQ2IzZzlJakFnTUNBek1qQWdNekl3SWo0S0lDQWdJRHh5WldOMElIaDBQU0k0TUNJZ2VUMGlPREFpSUhkcFpIUm9QU0kxTmpBaUlHaGxhV2RvZEQwaU5UWXdJaUJtYVd4c1BTSWpSa1l3TURBd0lpOCtDaUFnSUNBZ1BIUmxlSFFnZUQwaU1UWXdJaUI1UFNJeE5qQWlJSFJsZUhRdFlXNWphRzl5UFNKdGFXUmtiR1VpSUdacGJHdzlJaU5tWm1abVppSWdabTl1ZEMxemFYcGxQU0k2TUhCNElpQm1iMjUwTFhabGNuTnBiMjQ5SW5OaGJuTXRjMlZ5YVdZaVBqaDhaUzhpQlNCRWInQnVoU2xOUVV4RlRrRThMM1JsZUhRK0Nqd3ZjM1puUGc9PSIsInNpemVzIjoiMTkyeDE5MiIsInR5cGUiOiJpbWFnZS9zdmcreG1sIn0seyJzcmMiOiJkYXRhOmltYWdlL3N2Zyt4bWw7YmFzZTY0LFBITjJaeUI0Yld4dWN6MGlhSFIwY0RvdkwzZDNkeTUzTXk1dmNtY3ZNakF3TUM5emRtY2lJSFpwWlhkQ2IzZzlJakFnTUNBek1qQWdNekl3SWo0S0lDQWdJRHh5WldOMElIaDBQU0k0TUNJZ2VUMGlPREFpSUhkcFpIUm9QU0kxTmpBaUlHaGxhV2RvZEQwaU5UWXdJaUJtYVd4c1BTSWpSa1l3TURBd0lpOCtDaUFnSUNBZ1BIUmxlSFFnZUQwaU1UWXdJaUI1UFNJeE5qQWlJSFJsZUhRdFlXNWphRzl5UFNKdGFXUmtiR1VpSUdacGJHdzlJaU5tWm1abVppSWdabTl1ZEMxemFYcGxQU0k0TUhCNElpQm1iMjUwTFhabGNuTnBiMjQ5SW5OaGJuTXRjMlZ5YVdZaVBqaDhKUzhpQkVxdWVCMGVHaGxGUkV4Q1RrRzhMM1JsZUhRK0Nqd3ZjM1puUGc9PSIsInNpemVzIjoiNTEyeDUxMiIsInR5cGUiOiJpbWFnZS9zdmcreG1sIn1dfQ==">
+    
     <style>
         :root {
             --primary-red: #FF0000;
@@ -682,6 +692,109 @@
                 updateCartDisplay();
                 showNotification(`¡Gracias ${customerName}! Tu pedido fue enviado por WhatsApp.`);
             }
+        }
+
+        // PWA Installation and Service Worker
+        let deferredPrompt;
+        
+        // Register a simple service worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                // Register inline service worker
+                const swCode = `
+                    const CACHE_NAME = 'donamalena-v1';
+                    self.addEventListener('install', (event) => {
+                        console.log('Service Worker installed');
+                        self.skipWaiting();
+                    });
+                    self.addEventListener('activate', (event) => {
+                        console.log('Service Worker activated');
+                    });
+                    self.addEventListener('fetch', (event) => {
+                        // Simple fetch handling
+                        event.respondWith(fetch(event.request));
+                    });
+                `;
+                
+                const blob = new Blob([swCode], { type: 'application/javascript' });
+                const swUrl = URL.createObjectURL(blob);
+                
+                navigator.serviceWorker.register(swUrl)
+                    .then(registration => {
+                        console.log('SW registered:', registration);
+                    })
+                    .catch(error => {
+                        console.log('SW registration failed:', error);
+                    });
+            });
+        }
+        
+        window.addEventListener('beforeinstallprompt', (e) => {
+            console.log('beforeinstallprompt event fired');
+            e.preventDefault();
+            deferredPrompt = e;
+            // Show our custom install prompt
+            document.getElementById('installPrompt').style.display = 'block';
+        });
+
+        window.addEventListener('appinstalled', (e) => {
+            console.log('App was installed');
+            document.getElementById('installPrompt').style.display = 'none';
+            showNotification('¡App instalada exitosamente! 🎉');
+        });
+
+        async function installApp() {
+            console.log('Install button clicked');
+            
+            if (deferredPrompt) {
+                console.log('Using deferred prompt');
+                // Show browser's native install dialog
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                
+                console.log('User choice:', outcome);
+                
+                if (outcome === 'accepted') {
+                    showNotification('¡Instalación iniciada! 🎉');
+                    document.getElementById('installPrompt').style.display = 'none';
+                } else {
+                    showNotification('Instalación cancelada. Puedes instalar más tarde.');
+                }
+                deferredPrompt = null;
+            } else {
+                console.log('No deferred prompt available, showing instructions');
+                // Fallback instructions for different browsers
+                showInstallInstructions();
+            }
+        }
+
+        function showInstallInstructions() {
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+            const isAndroid = /Android/.test(navigator.userAgent);
+            
+            let instructions = '';
+            
+            if (isIOS) {
+                instructions = `📱 Para instalar en iPhone/iPad:
+
+1. Toca el botón de compartir (⬆️) en Safari
+2. Selecciona "Agregar a pantalla de inicio"
+3. Toca "Agregar"`;
+            } else if (isAndroid) {
+                instructions = `📱 Para instalar en Android:
+
+1. Toca el menú (⋮) en tu navegador
+2. Selecciona "Agregar a pantalla de inicio"
+3. Toca "Agregar"`;
+            } else {
+                instructions = `💻 Para instalar:
+
+1. Busca el ícono de instalar (⬇️) en la barra de direcciones
+2. Haz clic en "Instalar"
+3. Confirma la instalación`;
+            }
+            
+            alert(instructions);
         }
     </script>
 </body>
