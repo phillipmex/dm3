@@ -1,170 +1,4 @@
-        <!-- Floating Cart Button -->
-        <div class="cart" onclick="App.showCart()">
-            🛒
-            <div class="cart-count" id="cartCount" style="display: none;">0</div>
-        </div>
-    </div>
-
-    <!-- Cart Modal (will be added via JavaScript) -->
-    <div id="cartModal" style="display: none;"></div>
-
-    <script>
-        // Create global App object IMMEDIATELY - before any DOM loading
-        window.App = {
-            cart: [],
-            deferredPrompt: null,
-            installBannerDismissed: false,
-
-            addToCart: function(name, price) {
-                console.log('Adding to cart:', name, price);
-                
-                const existingItem = this.cart.find(item => item.name === name);
-                
-                if (existingItem) {
-                    existingItem.quantity += 1;
-                } else {
-                    this.cart.push({
-                        name: name,
-                        price: price,
-                        quantity: 1
-                    });
-                }
-                
-                this.updateCartDisplay();
-                this.showNotification('✓ ' + name + ' agregado al carrito');
-            },
-
-            updateCartDisplay: function() {
-                const cartCount = document.getElementById('cartCount');
-                if (!cartCount) return;
-                
-                const totalItems = this.cart.reduce((sum, item) => sum + item.quantity, 0);
-                
-                if (totalItems > 0) {
-                    cartCount.style.display = 'flex';
-                    cartCount.textContent = totalItems;
-                } else {
-                    cartCount.style.display = 'none';
-                }
-            },
-
-            showCart: function() {
-                if (this.cart.length === 0) {
-                    alert('Tu carrito está vacío. ¡Agrega algunos deliciosos antojitos!');
-                    return;
-                }
-                
-                this.showCartModal();
-            },
-
-            showCartModal: function() {
-                const modal = document.getElementById('cartModal');
-                if (!modal) return;
-                
-                const total = this.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-                
-                modal.innerHTML = `
-                    <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 1rem;">
-                        <div style="background: white; border-radius: 10px; max-width: 400px; width: 100%; max-height: 80vh; overflow-y: auto;">
-                            <div style="padding: 1rem; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">
-                                <h2 style="margin: 0; color: var(--primary-red);">Tu Pedido</h2>
-                                <button onclick="App.closeCartModal()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer;">×</button>
-                            </div>
-                            <div style="padding: 1rem;">
-                                ${this.cart.map((item, index) => `
-                                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0; border-bottom: 1px solid #f0f0f0;">
-                                        <div>
-                                            <strong>${item.name}</strong><br>
-                                            <small>${item.price} c/u</small>
-                                        </div>
-                                        <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                            <button onclick="App.updateQuantity(${index}, -1)" style="background: var(--primary-red); color: white; border: none; border-radius: 50%; width: 25px; height: 25px; cursor: pointer;">-</button>
-                                            <span>${item.quantity}</span>
-                                            <button onclick="App.updateQuantity(${index}, 1)" style="background: var(--primary-red); color: white; border: none; border-radius: 50%; width: 25px; height: 25px; cursor: pointer;">+</button>
-                                            <strong style="margin-left: 0.5rem;">${item.price * item.quantity}</strong>
-                                        </div>
-                                    </div>
-                                `).join('')}
-                                <div style="margin-top: 1rem; padding-top: 1rem; border-top: 2px solid var(--primary-red);">
-                                    <div style="display: flex; justify-content: space-between; font-size: 1.2rem; font-weight: bold;">
-                                        <span>Total:</span>
-                                        <span style="color: var(--primary-red);">${total}</span>
-                                    </div>
-                                </div>
-                                <div style="margin-top: 1rem;">
-                                    <button onclick="App.proceedToOrder()" style="width: 100%; background: linear-gradient(135deg, var(--primary-red) 0%, var(--secondary-red) 100%); color: white; border: none; padding: 1rem; border-radius: 5px; cursor: pointer; font-weight: 600; font-size: 1.1rem;">
-                                        Realizar Pedido 📱
-                                    </button>
-                                    <p style="text-align: center; margin-top: 0.5rem; font-size: 0.9rem; color: #666;">
-                                        Te contactaremos por WhatsApp para confirmar tu pedido
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                `;
-                modal.style.display = 'block';
-            },
-
-            closeCartModal: function() {
-                const modal = document.getElementById('cartModal');
-                if (modal) {
-                    modal.style.display = 'none';
-                }
-            },
-
-            updateQuantity: function(index, change) {
-                if (this.cart[index]) {
-                    this.cart[index].quantity += change;
-                    if (this.cart[index].quantity <= 0) {
-                        this.cart.splice(index, 1);
-                    }
-                    this.updateCartDisplay();
-                    this.showCartModal();
-                }
-            },
-
-            proceedToOrder: function() {
-                if (this.cart.length === 0) return;
-                
-                const total = this.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-                const orderDetails = this.cart.map(item => 
-                    `${item.quantity}x ${item.name} (${item.price * item.quantity})`
-                ).join('\n');
-                
-                const message = `🌮 *Nuevo pedido - Doña Malena* 🌮\n\n${orderDetails}\n\n💰 *Total: ${total}*\n\n📱 Pedido realizado desde la app web\n⏰ ${new Date().toLocaleString('es-MX')}`;
-                
-                const whatsappUrl = `https://wa.me/5219988467737?text=${encodeURIComponent(message)}`;
-                window.open(whatsappUrl, '_blank');
-                
-                this.cart = [];
-                this.updateCartDisplay();
-                this.closeCartModal();
-                
-                alert('¡Gracias! Tu pedido ha sido enviado por WhatsApp. Te contactaremos pronto para confirmar.');
-            },
-
-            showNotification: function(message) {
-                const notification = document.createElement('div');
-                const bannerElement = document.getElementById('pwaInstallBanner');
-                const topPosition = (bannerElement && bannerElement.classList.contains('show')) ? '100px' : '20px';
-                
-                notification.style.cssText = `
-                    position: fixed;
-                    top: ${topPosition};
-                    right: 20px;
-                    background: var(--deep-green);
-                    color: white;
-                    padding: 1rem;
-                    border-radius: 8px;
-                    z-index: 3000;
-                    font-weight: bold;
-                    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-                    max-width: 300px;
-                    word-wrap: break-word;
-                `;
-                notification.textContent = message;
-                <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -180,10 +14,13 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="Doña Malena">
     
-    <!-- Icons -->
-    <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192x192.png">
-    <link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512x512.png">
-    <link rel="apple-touch-icon" href="icons/icon-192x192.png">
+    <!-- Icons - Fixed paths to match manifest -->
+    <link rel="icon" type="image/png" sizes="32x32" href="/dm3/icons/icon-128x128.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/dm3/icons/icon-192x192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="/dm3/icons/icon-512x512.png">
+    <link rel="apple-touch-icon" href="/dm3/icons/icon-192x192.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="/dm3/icons/icon-152x152.png">
+    <link rel="apple-touch-icon" sizes="192x192" href="/dm3/icons/icon-192x192.png">
     
     <!-- Preconnect for performance -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -877,78 +714,6 @@
                             <span class="menu-item-name">Empanadas con carne</span>
                             <span class="menu-item-price">$8</span>
                         </div>
-                        <button class="add-to-cart-btn" onclick="App.addToCart('Empanadas con carne', 8)">
-                            Agregar al Carrito
-                        </button>
-                    </div>
-                </div>
-
-                <div class="menu-item">
-                    <div class="menu-item-content">
-                        <div class="menu-item-header">
-                            <span class="menu-item-name">Empanadas con Q.hebra</span>
-                            <span class="menu-item-price">$10</span>
-                        </div>
-                        <button class="add-to-cart-btn" onclick="App.addToCart('Empanadas con Q.hebra', 10)">
-                            Agregar al Carrito
-                        </button>
-                    </div>
-                </div>
-
-                <div class="menu-item">
-                    <div class="menu-item-content">
-                        <div class="menu-item-header">
-                            <span class="menu-item-name">Panuchós</span>
-                            <span class="menu-item-price">$18</span>
-                        </div>
-                        <button class="add-to-cart-btn" onclick="App.addToCart('Panuchós', 18)">
-                            Agregar al Carrito
-                        </button>
-                    </div>
-                </div>
-
-                <div class="menu-item">
-                    <div class="menu-item-content">
-                        <div class="menu-item-header">
-                            <span class="menu-item-name">Salbutes</span>
-                            <span class="menu-item-price">$18</span>
-                        </div>
-                        <button class="add-to-cart-btn" onclick="App.addToCart('Salbutes', 18)">
-                            Agregar al Carrito
-                        </button>
-                    </div>
-                </div>
-
-                <div class="menu-item">
-                    <div class="menu-item-content">
-                        <div class="menu-item-header">
-                            <span class="menu-item-name">Sopes</span>
-                            <span class="menu-item-price">$25</span>
-                        </div>
-                        <button class="add-to-cart-btn" onclick="App.addToCart('Sopes', 25)">
-                            Agregar al Carrito
-                        </button>
-                    </div>
-                </div>
-
-                <div class="menu-item">
-                    <div class="menu-item-content">
-                        <div class="menu-item-header">
-                            <span class="menu-item-name">Polcanes sencillos</span>
-                            <span class="menu-item-price">$8</span>
-                        </div>
-                        <button class="add-to-cart-btn" onclick="App.addToCart('Polcanes sencillos', 8)">
-                            Agregar al Carrito
-                        </button>
-                    </div>
-                </div>
-
-                <div class="menu-item">
-                    <div class="menu-item-content">
-                        <div class="menu-item-header">
-                            <span class="menu-item-name">Polcanes rellenos con carne</span>
-                            <span class="menu-item-price">$20</span>
-                        </div>
                         <button class="add-to-cart-btn" onclick="App.addToCart('Polcanes rellenos con carne', 20)">
                             Agregar al Carrito
                         </button>
@@ -1063,18 +828,6 @@
                     </div>
                 </div>
 
-                <div class="menu-item">
-                    <div class="menu-item-content">
-                        <div class="menu-item-header">
-                            <span class="menu-item-name">zzebras</span>
-                            <span class="menu-item-price">$999</span>
-                        </div>
-                        <button class="add-to-cart-btn" onclick="App.addToCart('zzebras', 999)">
-                            Agregar al Carrito
-                        </button>
-                    </div>
-                </div>
-
                 <!-- Bebidas Section Header -->
                 <div class="section-header">
                     🥤 Bebidas
@@ -1108,10 +861,10 @@
                 <div class="menu-item">
                     <div class="menu-item-content">
                         <div class="menu-item-header">
-                            <span class="menu-item-name">Jamaiica</span>
+                            <span class="menu-item-name">Jamaica</span>
                             <span class="menu-item-price">$20</span>
                         </div>
-                        <button class="add-to-cart-btn" onclick="App.addToCart('Jamaiica', 20)">
+                        <button class="add-to-cart-btn" onclick="App.addToCart('Jamaica', 20)">
                             Agregar al Carrito
                         </button>
                     </div>
@@ -1154,247 +907,160 @@
     <div id="cartModal" style="display: none;"></div>
 
     <script>
-        // Global variables - available immediately
-        let cart = [];
-        let deferredPrompt;
-        let installBannerDismissed = false;
-
-        // Global Cart Functions - defined immediately
-        function addToCart(name, price) {
-            console.log('Adding to cart:', name, price); // Debug log
-            
-            // Find if item already exists
-            const existingItem = cart.find(item => item.name === name);
-            
-            if (existingItem) {
-                existingItem.quantity += 1;
-            } else {
-                cart.push({
-                    name: name,
-                    price: price,
-                    quantity: 1
-                });
-            }
-            
-            updateCartDisplay();
-            showNotification('✓ ' + name + ' agregado al carrito');
-        }
-
-        function updateCartDisplay() {
-            const cartCount = document.getElementById('cartCount');
-            if (!cartCount) return; // Exit if element not found
-            
-            const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
-            
-            if (totalItems > 0) {
-                cartCount.style.display = 'flex';
-                cartCount.textContent = totalItems;
-            } else {
-                cartCount.style.display = 'none';
-            }
-        }
-
-        function showCart() {
-            if (cart.length === 0) {
-                alert('Tu carrito está vacío. ¡Agrega algunos deliciosos antojitos!');
-                return;
-            }
-            
-            showCartModal();
-        }
-
-        function showCartModal() {
-            const modal = document.getElementById('cartModal');
-            if (!modal) return; // Exit if element not found
-            
-            const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-            
-            modal.innerHTML = `
-                <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 1rem;">
-                    <div style="background: white; border-radius: 10px; max-width: 400px; width: 100%; max-height: 80vh; overflow-y: auto;">
-                        <div style="padding: 1rem; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">
-                            <h2 style="margin: 0; color: var(--primary-red);">Tu Pedido</h2>
-                            <button onclick="closeCartModal()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer;">×</button>
-                        </div>
-                        <div style="padding: 1rem;">
-                            ${cart.map((item, index) => `
-                                <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0; border-bottom: 1px solid #f0f0f0;">
-                                    <div>
-                                        <strong>${item.name}</strong><br>
-                                        <small>${item.price} c/u</small>
-                                    </div>
-                                    <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                        <button onclick="updateQuantity(${index}, -1)" style="background: var(--primary-red); color: white; border: none; border-radius: 50%; width: 25px; height: 25px; cursor: pointer;">-</button>
-                                        <span>${item.quantity}</span>
-                                        <button onclick="updateQuantity(${index}, 1)" style="background: var(--primary-red); color: white; border: none; border-radius: 50%; width: 25px; height: 25px; cursor: pointer;">+</button>
-                                        <strong style="margin-left: 0.5rem;">${item.price * item.quantity}</strong>
-                                    </div>
-                                </div>
-                            `).join('')}
-                            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 2px solid var(--primary-red);">
-                                <div style="display: flex; justify-content: space-between; font-size: 1.2rem; font-weight: bold;">
-                                    <span>Total:</span>
-                                    <span style="color: var(--primary-red);">${total}</span>
-                                </div>
-                            </div>
-                            <div style="margin-top: 1rem;">
-                                <button onclick="proceedToOrder()" style="width: 100%; background: linear-gradient(135deg, var(--primary-red) 0%, var(--secondary-red) 100%); color: white; border: none; padding: 1rem; border-radius: 5px; cursor: pointer; font-weight: 600; font-size: 1.1rem;">
-                                    Realizar Pedido 📱
-                                </button>
-                                <p style="text-align: center; margin-top: 0.5rem; font-size: 0.9rem; color: #666;">
-                                    Te contactaremos por WhatsApp para confirmar tu pedido
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-            modal.style.display = 'block';
-        }
-
-        function closeCartModal() {
-            const modal = document.getElementById('cartModal');
-            if (modal) {
-                modal.style.display = 'none';
-            }
-        }
-
-        function updateQuantity(index, change) {
-            if (cart[index]) {
-                cart[index].quantity += change;
-                if (cart[index].quantity <= 0) {
-                    cart.splice(index, 1);
-                }
-                updateCartDisplay();
-                showCartModal(); // Refresh the modal
-            }
-        }
-
-        function proceedToOrder() {
-            if (cart.length === 0) return;
-            
-            const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-            const orderDetails = cart.map(item => 
-                `${item.quantity}x ${item.name} (${item.price * item.quantity})`
-            ).join('\n');
-            
-            const message = `🌮 *Nuevo pedido - Doña Malena* 🌮\n\n${orderDetails}\n\n💰 *Total: ${total}*\n\n📱 Pedido realizado desde la app web\n⏰ ${new Date().toLocaleString('es-MX')}`;
-            
-            const whatsappUrl = `https://wa.me/5219988467737?text=${encodeURIComponent(message)}`;
-            window.open(whatsappUrl, '_blank');
-            
-            // Clear cart after order
-            cart = [];
-            updateCartDisplay();
-            closeCartModal();
-            
-            alert('¡Gracias! Tu pedido ha sido enviado por WhatsApp. Te contactaremos pronto para confirmar.');
-        }
-
-        function showNotification(message) {
-            const notification = document.createElement('div');
-            const bannerElement = document.getElementById('pwaInstallBanner');
-            const topPosition = (bannerElement && bannerElement.classList.contains('show')) ? '100px' : '20px';
-            
-            notification.style.cssText = `
-                position: fixed;
-                top: ${topPosition};
-                right: 20px;
-                background: var(--deep-green);
-                color: white;
-                padding: 1rem;
-                border-radius: 8px;
-                z-index: 3000;
-                font-weight: bold;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-                max-width: 300px;
-                word-wrap: break-word;
-            `;
-            notification.textContent = message;
-            document.body.appendChild(notification);
-            
-            setTimeout(() => {
-                if (document.body.contains(notification)) {
-                    document.body.removeChild(notification);
-                }
-            }, 2000);
-        }
-
-        // PWA Functions
-        function isStandalone() {
-            return window.matchMedia('(display-mode: standalone)').matches || 
-                   window.navigator.standalone || 
-                   document.referrer.includes('android-app://');
-        }
-
-        function showInstallBanner() {
-            if (isStandalone() || installBannerDismissed) return;
-            
-            const banner = document.getElementById('pwaInstallBanner');
-            const body = document.body;
-            
-            if (banner && body) {
-                setTimeout(() => {
-                    banner.classList.add('show');
-                    body.classList.add('banner-shown');
-                }, 2000);
-            }
-        }
-
-        function hideInstallBanner() {
-            const banner = document.getElementById('pwaInstallBanner');
-            const body = document.body;
-            
-            if (banner && body) {
-                banner.classList.remove('show');
-                body.classList.remove('banner-shown');
-            }
-        }
-
-        async function installPWA() {
-            if (!deferredPrompt) {
-                alert('Para instalar la app:\n\n1. Toca el menú de tu navegador (⋮)\n2. Selecciona "Agregar a pantalla de inicio"\n3. Confirma la instalación');
-                return;
-            }
-
-            try {
-                deferredPrompt.prompt();
-                const { outcome } = await deferredPrompt.userChoice;
-                
-                if (outcome === 'accepted') {
-                    hideInstallBanner();
-                    setTimeout(() => {
-                        alert('¡App instalada correctamente! 🎉\nEncontrarás el ícono en tu pantalla de inicio.');
-                    }, 1000);
-                }
-                
-                deferredPrompt = null;
-            } catch (error) {
-                console.log('Install prompt error:', error);
-            }
-        }
-
-        // Make functions explicitly global (this ensures they're available to onclick handlers)
-        window.addToCart = addToCart;
-        window.showCart = showCart;
-        window.closeCartModal = closeCartModal;
-        window.updateQuantity = updateQuantity;
-        window.proceedToOrder = proceedToOrder;
-
-        // Debug: Verify functions are available
-        console.log('Functions loaded:', {
-            addToCart: typeof window.addToCart,
-            showCart: typeof window.showCart,
-            closeCartModal: typeof window.closeCartModal,
-            updateQuantity: typeof window.updateQuantity,
-            proceedToOrder: typeof window.proceedToOrder
-        });
-
         // Event listeners for PWA
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
-            deferredPrompt = e;
+            App.deferredPrompt = e;
             
-            if (!isStandalone()) {
-                showInstallBanner();
+            if (!App.isStandalone()) {
+                App.showInstallBanner();
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const installBtn = document.getElementById('pwaInstallBtn');
+            const dismissBtn = document.getElementById('pwaDismissBtn');
             
+            if (installBtn) {
+                installBtn.addEventListener('click', App.installPWA);
+            }
+            
+            if (dismissBtn) {
+                dismissBtn.addEventListener('click', () => {
+                    App.installBannerDismissed = true;
+                    App.hideInstallBanner();
+                });
+            }
+            
+            // Check if already standalone
+            if (App.isStandalone()) {
+                App.hideInstallBanner();
+            }
+            
+            // Update operating status
+            const updateStatus = () => {
+                const now = new Date();
+                const day = now.getDay();
+                const hour = now.getHours();
+                const minute = now.getMinutes();
+                const currentTime = hour + minute / 60;
+                
+                const statusEl = document.getElementById('statusIndicator');
+                
+                if (day === 1) { // Monday
+                    statusEl.textContent = 'CERRADO';
+                    statusEl.style.background = '#ff4444';
+                } else if (currentTime >= 6.5 && currentTime < 12) { // 6:30 AM to 12:00 PM
+                    statusEl.textContent = 'ABIERTO';
+                    statusEl.style.background = 'var(--golden-yellow)';
+                } else {
+                    statusEl.textContent = 'CERRADO';
+                    statusEl.style.background = '#ff4444';
+                }
+            };
+            
+            updateStatus();
+            setInterval(updateStatus, 60000); // Update every minute
+            
+            // Offline/Online status
+            const updateOnlineStatus = () => {
+                const offlineIndicator = document.getElementById('offlineIndicator');
+                if (navigator.onLine) {
+                    offlineIndicator.classList.remove('show');
+                } else {
+                    offlineIndicator.classList.add('show');
+                }
+            };
+            
+            window.addEventListener('online', updateOnlineStatus);
+            window.addEventListener('offline', updateOnlineStatus);
+            updateOnlineStatus();
+        });
+
+        // Register service worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/dm3/sw.js')
+                    .then((registration) => {
+                        console.log('SW registered: ', registration);
+                    })
+                    .catch((registrationError) => {
+                        console.log('SW registration failed: ', registrationError);
+                    });
+            });
+        }
+    </script>
+</body>
+</html>to-cart-btn" onclick="App.addToCart('Empanadas con carne', 8)">
+                            Agregar al Carrito
+                        </button>
+                    </div>
+                </div>
+
+                <div class="menu-item">
+                    <div class="menu-item-content">
+                        <div class="menu-item-header">
+                            <span class="menu-item-name">Empanadas con Q.hebra</span>
+                            <span class="menu-item-price">$10</span>
+                        </div>
+                        <button class="add-to-cart-btn" onclick="App.addToCart('Empanadas con Q.hebra', 10)">
+                            Agregar al Carrito
+                        </button>
+                    </div>
+                </div>
+
+                <div class="menu-item">
+                    <div class="menu-item-content">
+                        <div class="menu-item-header">
+                            <span class="menu-item-name">Panuchós</span>
+                            <span class="menu-item-price">$18</span>
+                        </div>
+                        <button class="add-to-cart-btn" onclick="App.addToCart('Panuchós', 18)">
+                            Agregar al Carrito
+                        </button>
+                    </div>
+                </div>
+
+                <div class="menu-item">
+                    <div class="menu-item-content">
+                        <div class="menu-item-header">
+                            <span class="menu-item-name">Salbutes</span>
+                            <span class="menu-item-price">$18</span>
+                        </div>
+                        <button class="add-to-cart-btn" onclick="App.addToCart('Salbutes', 18)">
+                            Agregar al Carrito
+                        </button>
+                    </div>
+                </div>
+
+                <div class="menu-item">
+                    <div class="menu-item-content">
+                        <div class="menu-item-header">
+                            <span class="menu-item-name">Sopes</span>
+                            <span class="menu-item-price">$25</span>
+                        </div>
+                        <button class="add-to-cart-btn" onclick="App.addToCart('Sopes', 25)">
+                            Agregar al Carrito
+                        </button>
+                    </div>
+                </div>
+
+                <div class="menu-item">
+                    <div class="menu-item-content">
+                        <div class="menu-item-header">
+                            <span class="menu-item-name">Polcanes sencillos</span>
+                            <span class="menu-item-price">$8</span>
+                        </div>
+                        <button class="add-to-cart-btn" onclick="App.addToCart('Polcanes sencillos', 8)">
+                            Agregar al Carrito
+                        </button>
+                    </div>
+                </div>
+
+                <div class="menu-item">
+                    <div class="menu-item-content">
+                        <div class="menu-item-header">
+                            <span class="menu-item-name">Polcanes rellenos con carne</span>
+                            <span class="menu-item-price">$20</span>
+                        </div>
+                        <button class="add-
