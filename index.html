@@ -1,4 +1,170 @@
-<!DOCTYPE html>
+        <!-- Floating Cart Button -->
+        <div class="cart" onclick="App.showCart()">
+            🛒
+            <div class="cart-count" id="cartCount" style="display: none;">0</div>
+        </div>
+    </div>
+
+    <!-- Cart Modal (will be added via JavaScript) -->
+    <div id="cartModal" style="display: none;"></div>
+
+    <script>
+        // Create global App object IMMEDIATELY - before any DOM loading
+        window.App = {
+            cart: [],
+            deferredPrompt: null,
+            installBannerDismissed: false,
+
+            addToCart: function(name, price) {
+                console.log('Adding to cart:', name, price);
+                
+                const existingItem = this.cart.find(item => item.name === name);
+                
+                if (existingItem) {
+                    existingItem.quantity += 1;
+                } else {
+                    this.cart.push({
+                        name: name,
+                        price: price,
+                        quantity: 1
+                    });
+                }
+                
+                this.updateCartDisplay();
+                this.showNotification('✓ ' + name + ' agregado al carrito');
+            },
+
+            updateCartDisplay: function() {
+                const cartCount = document.getElementById('cartCount');
+                if (!cartCount) return;
+                
+                const totalItems = this.cart.reduce((sum, item) => sum + item.quantity, 0);
+                
+                if (totalItems > 0) {
+                    cartCount.style.display = 'flex';
+                    cartCount.textContent = totalItems;
+                } else {
+                    cartCount.style.display = 'none';
+                }
+            },
+
+            showCart: function() {
+                if (this.cart.length === 0) {
+                    alert('Tu carrito está vacío. ¡Agrega algunos deliciosos antojitos!');
+                    return;
+                }
+                
+                this.showCartModal();
+            },
+
+            showCartModal: function() {
+                const modal = document.getElementById('cartModal');
+                if (!modal) return;
+                
+                const total = this.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+                
+                modal.innerHTML = `
+                    <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 1rem;">
+                        <div style="background: white; border-radius: 10px; max-width: 400px; width: 100%; max-height: 80vh; overflow-y: auto;">
+                            <div style="padding: 1rem; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">
+                                <h2 style="margin: 0; color: var(--primary-red);">Tu Pedido</h2>
+                                <button onclick="App.closeCartModal()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer;">×</button>
+                            </div>
+                            <div style="padding: 1rem;">
+                                ${this.cart.map((item, index) => `
+                                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0; border-bottom: 1px solid #f0f0f0;">
+                                        <div>
+                                            <strong>${item.name}</strong><br>
+                                            <small>${item.price} c/u</small>
+                                        </div>
+                                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                            <button onclick="App.updateQuantity(${index}, -1)" style="background: var(--primary-red); color: white; border: none; border-radius: 50%; width: 25px; height: 25px; cursor: pointer;">-</button>
+                                            <span>${item.quantity}</span>
+                                            <button onclick="App.updateQuantity(${index}, 1)" style="background: var(--primary-red); color: white; border: none; border-radius: 50%; width: 25px; height: 25px; cursor: pointer;">+</button>
+                                            <strong style="margin-left: 0.5rem;">${item.price * item.quantity}</strong>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                                <div style="margin-top: 1rem; padding-top: 1rem; border-top: 2px solid var(--primary-red);">
+                                    <div style="display: flex; justify-content: space-between; font-size: 1.2rem; font-weight: bold;">
+                                        <span>Total:</span>
+                                        <span style="color: var(--primary-red);">${total}</span>
+                                    </div>
+                                </div>
+                                <div style="margin-top: 1rem;">
+                                    <button onclick="App.proceedToOrder()" style="width: 100%; background: linear-gradient(135deg, var(--primary-red) 0%, var(--secondary-red) 100%); color: white; border: none; padding: 1rem; border-radius: 5px; cursor: pointer; font-weight: 600; font-size: 1.1rem;">
+                                        Realizar Pedido 📱
+                                    </button>
+                                    <p style="text-align: center; margin-top: 0.5rem; font-size: 0.9rem; color: #666;">
+                                        Te contactaremos por WhatsApp para confirmar tu pedido
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                modal.style.display = 'block';
+            },
+
+            closeCartModal: function() {
+                const modal = document.getElementById('cartModal');
+                if (modal) {
+                    modal.style.display = 'none';
+                }
+            },
+
+            updateQuantity: function(index, change) {
+                if (this.cart[index]) {
+                    this.cart[index].quantity += change;
+                    if (this.cart[index].quantity <= 0) {
+                        this.cart.splice(index, 1);
+                    }
+                    this.updateCartDisplay();
+                    this.showCartModal();
+                }
+            },
+
+            proceedToOrder: function() {
+                if (this.cart.length === 0) return;
+                
+                const total = this.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+                const orderDetails = this.cart.map(item => 
+                    `${item.quantity}x ${item.name} (${item.price * item.quantity})`
+                ).join('\n');
+                
+                const message = `🌮 *Nuevo pedido - Doña Malena* 🌮\n\n${orderDetails}\n\n💰 *Total: ${total}*\n\n📱 Pedido realizado desde la app web\n⏰ ${new Date().toLocaleString('es-MX')}`;
+                
+                const whatsappUrl = `https://wa.me/5219988467737?text=${encodeURIComponent(message)}`;
+                window.open(whatsappUrl, '_blank');
+                
+                this.cart = [];
+                this.updateCartDisplay();
+                this.closeCartModal();
+                
+                alert('¡Gracias! Tu pedido ha sido enviado por WhatsApp. Te contactaremos pronto para confirmar.');
+            },
+
+            showNotification: function(message) {
+                const notification = document.createElement('div');
+                const bannerElement = document.getElementById('pwaInstallBanner');
+                const topPosition = (bannerElement && bannerElement.classList.contains('show')) ? '100px' : '20px';
+                
+                notification.style.cssText = `
+                    position: fixed;
+                    top: ${topPosition};
+                    right: 20px;
+                    background: var(--deep-green);
+                    color: white;
+                    padding: 1rem;
+                    border-radius: 8px;
+                    z-index: 3000;
+                    font-weight: bold;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                    max-width: 300px;
+                    word-wrap: break-word;
+                `;
+                notification.textContent = message;
+                <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -23,6 +189,231 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
+    
+    <!-- CRITICAL: Load JavaScript FIRST in head -->
+    <script>
+        // Create global App object IMMEDIATELY in head - before any HTML is parsed
+        window.App = window.App || {
+            cart: [],
+            deferredPrompt: null,
+            installBannerDismissed: false,
+
+            addToCart: function(name, price) {
+                console.log('Adding to cart:', name, price);
+                
+                const existingItem = this.cart.find(item => item.name === name);
+                
+                if (existingItem) {
+                    existingItem.quantity += 1;
+                } else {
+                    this.cart.push({
+                        name: name,
+                        price: price,
+                        quantity: 1
+                    });
+                }
+                
+                this.updateCartDisplay();
+                this.showNotification('✓ ' + name + ' agregado al carrito');
+            },
+
+            updateCartDisplay: function() {
+                const cartCount = document.getElementById('cartCount');
+                if (!cartCount) return;
+                
+                const totalItems = this.cart.reduce((sum, item) => sum + item.quantity, 0);
+                
+                if (totalItems > 0) {
+                    cartCount.style.display = 'flex';
+                    cartCount.textContent = totalItems;
+                } else {
+                    cartCount.style.display = 'none';
+                }
+            },
+
+            showCart: function() {
+                if (this.cart.length === 0) {
+                    alert('Tu carrito está vacío. ¡Agrega algunos deliciosos antojitos!');
+                    return;
+                }
+                
+                this.showCartModal();
+            },
+
+            showCartModal: function() {
+                const modal = document.getElementById('cartModal');
+                if (!modal) return;
+                
+                const total = this.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+                
+                modal.innerHTML = `
+                    <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 1rem;">
+                        <div style="background: white; border-radius: 10px; max-width: 400px; width: 100%; max-height: 80vh; overflow-y: auto;">
+                            <div style="padding: 1rem; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">
+                                <h2 style="margin: 0; color: var(--primary-red);">Tu Pedido</h2>
+                                <button onclick="App.closeCartModal()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer;">×</button>
+                            </div>
+                            <div style="padding: 1rem;">
+                                ${this.cart.map((item, index) => `
+                                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0; border-bottom: 1px solid #f0f0f0;">
+                                        <div>
+                                            <strong>${item.name}</strong><br>
+                                            <small>${item.price} c/u</small>
+                                        </div>
+                                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                            <button onclick="App.updateQuantity(${index}, -1)" style="background: var(--primary-red); color: white; border: none; border-radius: 50%; width: 25px; height: 25px; cursor: pointer;">-</button>
+                                            <span>${item.quantity}</span>
+                                            <button onclick="App.updateQuantity(${index}, 1)" style="background: var(--primary-red); color: white; border: none; border-radius: 50%; width: 25px; height: 25px; cursor: pointer;">+</button>
+                                            <strong style="margin-left: 0.5rem;">${item.price * item.quantity}</strong>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                                <div style="margin-top: 1rem; padding-top: 1rem; border-top: 2px solid var(--primary-red);">
+                                    <div style="display: flex; justify-content: space-between; font-size: 1.2rem; font-weight: bold;">
+                                        <span>Total:</span>
+                                        <span style="color: var(--primary-red);">${total}</span>
+                                    </div>
+                                </div>
+                                <div style="margin-top: 1rem;">
+                                    <button onclick="App.proceedToOrder()" style="width: 100%; background: linear-gradient(135deg, var(--primary-red) 0%, var(--secondary-red) 100%); color: white; border: none; padding: 1rem; border-radius: 5px; cursor: pointer; font-weight: 600; font-size: 1.1rem;">
+                                        Realizar Pedido 📱
+                                    </button>
+                                    <p style="text-align: center; margin-top: 0.5rem; font-size: 0.9rem; color: #666;">
+                                        Te contactaremos por WhatsApp para confirmar tu pedido
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                modal.style.display = 'block';
+            },
+
+            closeCartModal: function() {
+                const modal = document.getElementById('cartModal');
+                if (modal) {
+                    modal.style.display = 'none';
+                }
+            },
+
+            updateQuantity: function(index, change) {
+                if (this.cart[index]) {
+                    this.cart[index].quantity += change;
+                    if (this.cart[index].quantity <= 0) {
+                        this.cart.splice(index, 1);
+                    }
+                    this.updateCartDisplay();
+                    this.showCartModal();
+                }
+            },
+
+            proceedToOrder: function() {
+                if (this.cart.length === 0) return;
+                
+                const total = this.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+                const orderDetails = this.cart.map(item => 
+                    `${item.quantity}x ${item.name} (${item.price * item.quantity})`
+                ).join('\n');
+                
+                const message = `🌮 *Nuevo pedido - Doña Malena* 🌮\n\n${orderDetails}\n\n💰 *Total: ${total}*\n\n📱 Pedido realizado desde la app web\n⏰ ${new Date().toLocaleString('es-MX')}`;
+                
+                const whatsappUrl = `https://wa.me/5219988467737?text=${encodeURIComponent(message)}`;
+                window.open(whatsappUrl, '_blank');
+                
+                this.cart = [];
+                this.updateCartDisplay();
+                this.closeCartModal();
+                
+                alert('¡Gracias! Tu pedido ha sido enviado por WhatsApp. Te contactaremos pronto para confirmar.');
+            },
+
+            showNotification: function(message) {
+                const notification = document.createElement('div');
+                const bannerElement = document.getElementById('pwaInstallBanner');
+                const topPosition = (bannerElement && bannerElement.classList.contains('show')) ? '100px' : '20px';
+                
+                notification.style.cssText = `
+                    position: fixed;
+                    top: ${topPosition};
+                    right: 20px;
+                    background: var(--deep-green);
+                    color: white;
+                    padding: 1rem;
+                    border-radius: 8px;
+                    z-index: 3000;
+                    font-weight: bold;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                    max-width: 300px;
+                    word-wrap: break-word;
+                `;
+                notification.textContent = message;
+                document.body.appendChild(notification);
+                
+                setTimeout(() => {
+                    if (document.body.contains(notification)) {
+                        document.body.removeChild(notification);
+                    }
+                }, 2000);
+            },
+
+            // PWA Functions
+            isStandalone: function() {
+                return window.matchMedia('(display-mode: standalone)').matches || 
+                       window.navigator.standalone || 
+                       document.referrer.includes('android-app://');
+            },
+
+            showInstallBanner: function() {
+                if (this.isStandalone() || this.installBannerDismissed) return;
+                
+                const banner = document.getElementById('pwaInstallBanner');
+                const body = document.body;
+                
+                if (banner && body) {
+                    setTimeout(() => {
+                        banner.classList.add('show');
+                        body.classList.add('banner-shown');
+                    }, 2000);
+                }
+            },
+
+            hideInstallBanner: function() {
+                const banner = document.getElementById('pwaInstallBanner');
+                const body = document.body;
+                
+                if (banner && body) {
+                    banner.classList.remove('show');
+                    body.classList.remove('banner-shown');
+                }
+            },
+
+            installPWA: async function() {
+                if (!this.deferredPrompt) {
+                    alert('Para instalar la app:\n\n1. Toca el menú de tu navegador (⋮)\n2. Selecciona "Agregar a pantalla de inicio"\n3. Confirma la instalación');
+                    return;
+                }
+
+                try {
+                    this.deferredPrompt.prompt();
+                    const { outcome } = await this.deferredPrompt.userChoice;
+                    
+                    if (outcome === 'accepted') {
+                        this.hideInstallBanner();
+                        setTimeout(() => {
+                            alert('¡App instalada correctamente! 🎉\nEncontrarás el ícono en tu pantalla de inicio.');
+                        }, 1000);
+                    }
+                    
+                    this.deferredPrompt = null;
+                } catch (error) {
+                    console.log('Install prompt error:', error);
+                }
+            }
+        };
+
+        // Immediate verification in head
+        console.log('App loaded in HEAD:', typeof window.App.addToCart);
+    </script>
     
     <style>
         :root {
@@ -57,6 +448,88 @@
             margin: 0;
             background: white;
             min-height: 100vh;
+        }
+
+        /* PWA Install Banner */
+        .pwa-install-banner {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(135deg, var(--deep-green) 0%, #1a6b1a 100%);
+            color: white;
+            padding: 0.75rem 1rem;
+            z-index: 2000;
+            transform: translateY(-100%);
+            transition: transform 0.3s ease;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+
+        .pwa-install-banner.show {
+            transform: translateY(0);
+        }
+
+        .pwa-banner-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .pwa-banner-text {
+            flex: 1;
+            font-size: 0.9rem;
+        }
+
+        .pwa-banner-text strong {
+            display: block;
+            font-size: 1rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .pwa-banner-buttons {
+            display: flex;
+            gap: 0.5rem;
+            flex-shrink: 0;
+        }
+
+        .pwa-install-btn {
+            background: var(--golden-yellow);
+            color: var(--dark-text);
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.85rem;
+            transition: all 0.2s ease;
+        }
+
+        .pwa-install-btn:hover {
+            background: #ffed4e;
+            transform: translateY(-1px);
+        }
+
+        .pwa-dismiss-btn {
+            background: transparent;
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+            padding: 0.5rem 0.75rem;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s ease;
+        }
+
+        .pwa-dismiss-btn:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        /* Adjust body padding when banner is shown */
+        body.banner-shown {
+            padding-top: 80px;
         }
 
         /* Header */
@@ -259,41 +732,6 @@
             font-weight: bold;
         }
 
-        /* Install prompt styling */
-        .install-prompt {
-            position: static;
-            background: #DC2626;
-            color: white;
-            padding: 20px;
-            margin: 1rem 0.75rem;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-            display: block;
-        }
-
-        .install-prompt-title {
-            font-weight: bold;
-            font-size: 1.25rem;
-            margin-bottom: 0.5rem;
-        }
-
-        .install-prompt-subtitle {
-            font-size: 1rem;
-            opacity: 90%;
-        }
-
-        .install-btn {
-            padding: 1rem 2rem;
-            background: white;
-            color: #DC2626;
-            border: none;
-            border-radius: 8px;
-            font-weight: bold;
-            font-size: 1.125rem;
-            cursor: pointer;
-            min-width: 120px;
-        }
-
         .offline-indicator {
             background: #ff9800;
             color: white;
@@ -346,39 +784,9 @@
                 min-width: 200px;
             }
             
-            .restaurant-info,             .install-prompt {
+            .restaurant-info {
                 padding: 1.5rem;
                 margin: 1rem 0.75rem;
-            }
-            
-            .install-prompt-title {
-                font-size: 1.5rem;
-                margin-bottom: 0.75rem;
-            }
-            
-            .install-prompt-subtitle {
-                font-size: 1.125rem;
-                margin-bottom: 1rem;
-            }
-            
-            .install-btn {
-                padding: 1.25rem 2.5rem;
-                font-size: 1.25rem;
-                width: 100%;
-                margin-top: 1rem;
-            }
-
-            .install-prompt-content {
-                flex-direction: column;
-                gap: 1rem;
-            }
-
-            .install-prompt-buttons {
-                align-self: stretch;
-            }
-
-            .install-btn, .cancel-btn {
-                flex: 1;
             }
             
             .section-header {
@@ -386,11 +794,46 @@
                 padding: 1.25rem;
                 margin: 1.25rem 0.75rem 1rem 0.75rem;
             }
+
+            .pwa-banner-content {
+                flex-direction: column;
+                gap: 0.75rem;
+                text-align: center;
+            }
+
+            .pwa-banner-buttons {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .pwa-install-btn,
+            .pwa-dismiss-btn {
+                flex: 1;
+                max-width: 120px;
+            }
+
+            body.banner-shown {
+                padding-top: 110px;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
+        <!-- PWA Install Banner -->
+        <div class="pwa-install-banner" id="pwaInstallBanner">
+            <div class="pwa-banner-content">
+                <div class="pwa-banner-text">
+                    <strong>📱 ¡Instala la App!</strong>
+                    <span>Acceso rápido desde tu pantalla de inicio</span>
+                </div>
+                <div class="pwa-banner-buttons">
+                    <button class="pwa-install-btn" id="pwaInstallBtn">Instalar</button>
+                    <button class="pwa-dismiss-btn" id="pwaDismissBtn">Más tarde</button>
+                </div>
+            </div>
+        </div>
+
         <!-- Offline Indicator -->
         <div class="offline-indicator" id="offlineIndicator">
             📵 Sin conexión - Algunas funciones pueden no estar disponibles
@@ -425,7 +868,7 @@
                             <span class="menu-item-name">Empanadas con carne</span>
                             <span class="menu-item-price">$8</span>
                         </div>
-                        <button class="add-to-cart-btn" onclick="addToCart('Empanadas con carne', 8)">
+                        <button class="add-to-cart-btn" onclick="App.addToCart('Empanadas con carne', 8)">
                             Agregar al Carrito
                         </button>
                     </div>
@@ -437,7 +880,7 @@
                             <span class="menu-item-name">Empanadas con Q.hebra</span>
                             <span class="menu-item-price">$10</span>
                         </div>
-                        <button class="add-to-cart-btn" onclick="addToCart('Empanadas con Q.hebra', 10)">
+                        <button class="add-to-cart-btn" onclick="App.addToCart('Empanadas con Q.hebra', 10)">
                             Agregar al Carrito
                         </button>
                     </div>
@@ -449,7 +892,7 @@
                             <span class="menu-item-name">Panuchós</span>
                             <span class="menu-item-price">$18</span>
                         </div>
-                        <button class="add-to-cart-btn" onclick="addToCart('Panuchós', 18)">
+                        <button class="add-to-cart-btn" onclick="App.addToCart('Panuchós', 18)">
                             Agregar al Carrito
                         </button>
                     </div>
@@ -461,7 +904,7 @@
                             <span class="menu-item-name">Salbutes</span>
                             <span class="menu-item-price">$18</span>
                         </div>
-                        <button class="add-to-cart-btn" onclick="addToCart('Salbutes', 18)">
+                        <button class="add-to-cart-btn" onclick="App.addToCart('Salbutes', 18)">
                             Agregar al Carrito
                         </button>
                     </div>
@@ -473,7 +916,7 @@
                             <span class="menu-item-name">Sopes</span>
                             <span class="menu-item-price">$25</span>
                         </div>
-                        <button class="add-to-cart-btn" onclick="addToCart('Sopes', 25)">
+                        <button class="add-to-cart-btn" onclick="App.addToCart('Sopes', 25)">
                             Agregar al Carrito
                         </button>
                     </div>
@@ -485,7 +928,7 @@
                             <span class="menu-item-name">Polcanes sencillos</span>
                             <span class="menu-item-price">$8</span>
                         </div>
-                        <button class="add-to-cart-btn" onclick="addToCart('Polcanes sencillos', 8)">
+                        <button class="add-to-cart-btn" onclick="App.addToCart('Polcanes sencillos', 8)">
                             Agregar al Carrito
                         </button>
                     </div>
@@ -497,7 +940,7 @@
                             <span class="menu-item-name">Polcanes rellenos con carne</span>
                             <span class="menu-item-price">$20</span>
                         </div>
-                        <button class="add-to-cart-btn" onclick="addToCart('Polcanes rellenos con carne', 20)">
+                        <button class="add-to-cart-btn" onclick="App.addToCart('Polcanes rellenos con carne', 20)">
                             Agregar al Carrito
                         </button>
                     </div>
@@ -509,7 +952,7 @@
                             <span class="menu-item-name">Polcanes rellenos con carne y queso</span>
                             <span class="menu-item-price">$25</span>
                         </div>
-                        <button class="add-to-cart-btn" onclick="addToCart('Polcanes rellenos con carne y queso', 25)">
+                        <button class="add-to-cart-btn" onclick="App.addToCart('Polcanes rellenos con carne y queso', 25)">
                             Agregar al Carrito
                         </button>
                     </div>
@@ -521,7 +964,7 @@
                             <span class="menu-item-name">Tortas (Bolillo)</span>
                             <span class="menu-item-price">$35</span>
                         </div>
-                        <button class="add-to-cart-btn" onclick="addToCart('Tortas (Bolillo)', 35)">
+                        <button class="add-to-cart-btn" onclick="App.addToCart('Tortas (Bolillo)', 35)">
                             Agregar al Carrito
                         </button>
                     </div>
@@ -533,7 +976,7 @@
                             <span class="menu-item-name">Tortas especiales(jamón, queso y pollo)</span>
                             <span class="menu-item-price">$38</span>
                         </div>
-                        <button class="add-to-cart-btn" onclick="addToCart('Tortas especiales(jamón, queso y pollo)', 38)">
+                        <button class="add-to-cart-btn" onclick="App.addToCart('Tortas especiales(jamón, queso y pollo)', 38)">
                             Agregar al Carrito
                         </button>
                     </div>
@@ -545,7 +988,7 @@
                             <span class="menu-item-name">Sandwiches</span>
                             <span class="menu-item-price">$25</span>
                         </div>
-                        <button class="add-to-cart-btn" onclick="addToCart('Sandwiches', 25)">
+                        <button class="add-to-cart-btn" onclick="App.addToCart('Sandwiches', 25)">
                             Agregar al Carrito
                         </button>
                     </div>
@@ -557,7 +1000,7 @@
                             <span class="menu-item-name">Sandwiches especiales</span>
                             <span class="menu-item-price">$28</span>
                         </div>
-                        <button class="add-to-cart-btn" onclick="addToCart('Sandwiches especiales', 28)">
+                        <button class="add-to-cart-btn" onclick="App.addToCart('Sandwiches especiales', 28)">
                             Agregar al Carrito
                         </button>
                     </div>
@@ -569,7 +1012,7 @@
                             <span class="menu-item-name">Hamburguesas sencilla</span>
                             <span class="menu-item-price">$55</span>
                         </div>
-                        <button class="add-to-cart-btn" onclick="addToCart('Hamburguesas sencilla', 55)">
+                        <button class="add-to-cart-btn" onclick="App.addToCart('Hamburguesas sencilla', 55)">
                             Agregar al Carrito
                         </button>
                     </div>
@@ -581,7 +1024,7 @@
                             <span class="menu-item-name">Hamburguesas con papas</span>
                             <span class="menu-item-price">$65</span>
                         </div>
-                        <button class="add-to-cart-btn" onclick="addToCart('Hamburguesas con papas', 65)">
+                        <button class="add-to-cart-btn" onclick="App.addToCart('Hamburguesas con papas', 65)">
                             Agregar al Carrito
                         </button>
                     </div>
@@ -593,7 +1036,7 @@
                             <span class="menu-item-name">Burritacos</span>
                             <span class="menu-item-price">$20</span>
                         </div>
-                        <button class="add-to-cart-btn" onclick="addToCart('Burritacos', 20)">
+                        <button class="add-to-cart-btn" onclick="App.addToCart('Burritacos', 20)">
                             Agregar al Carrito
                         </button>
                     </div>
@@ -605,7 +1048,19 @@
                             <span class="menu-item-name">Burritas</span>
                             <span class="menu-item-price">$15</span>
                         </div>
-                        <button class="add-to-cart-btn" onclick="addToCart('Burritas', 15)">
+                        <button class="add-to-cart-btn" onclick="App.addToCart('Burritas', 15)">
+                            Agregar al Carrito
+                        </button>
+                    </div>
+                </div>
+
+                <div class="menu-item">
+                    <div class="menu-item-content">
+                        <div class="menu-item-header">
+                            <span class="menu-item-name">zzebras</span>
+                            <span class="menu-item-price">$999</span>
+                        </div>
+                        <button class="add-to-cart-btn" onclick="App.addToCart('zzebras', 999)">
                             Agregar al Carrito
                         </button>
                     </div>
@@ -623,7 +1078,7 @@
                             <span class="menu-item-name">Coke Lite 600ml</span>
                             <span class="menu-item-price">$30</span>
                         </div>
-                        <button class="add-to-cart-btn" onclick="addToCart('Coke Lite 600ml', 30)">
+                        <button class="add-to-cart-btn" onclick="App.addToCart('Coke Lite 600ml', 30)">
                             Agregar al Carrito
                         </button>
                     </div>
@@ -635,7 +1090,7 @@
                             <span class="menu-item-name">Pepsi light</span>
                             <span class="menu-item-price">$35</span>
                         </div>
-                        <button class="add-to-cart-btn" onclick="addToCart('Pepsi light', 35)">
+                        <button class="add-to-cart-btn" onclick="App.addToCart('Pepsi light', 35)">
                             Agregar al Carrito
                         </button>
                     </div>
@@ -647,7 +1102,7 @@
                             <span class="menu-item-name">Jamaiica</span>
                             <span class="menu-item-price">$20</span>
                         </div>
-                        <button class="add-to-cart-btn" onclick="addToCart('Jamaiica', 20)">
+                        <button class="add-to-cart-btn" onclick="App.addToCart('Jamaiica', 20)">
                             Agregar al Carrito
                         </button>
                     </div>
@@ -679,23 +1134,8 @@
             </section>
         </main>
 
-        <!-- Install Prompt - Fixed at bottom of page -->
-        <div id="installPrompt" class="install-prompt">
-            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
-                <div style="flex: 1; min-width: 200px;">
-                    <div class="install-prompt-title">📱 Instalar Doña Malena</div>
-                    <div class="install-prompt-subtitle">Acceso rápido desde tu pantalla de inicio</div>
-                </div>
-                <div>
-                    <button onclick="installApp()" class="install-btn">
-                        INSTALAR
-                    </button>
-                </div>
-            </div>
-        </div>
-
         <!-- Floating Cart Button -->
-        <div class="cart" onclick="showCart()">
+        <div class="cart" onclick="App.showCart()">
             🛒
             <div class="cart-count" id="cartCount" style="display: none;">0</div>
         </div>
@@ -705,10 +1145,15 @@
     <div id="cartModal" style="display: none;"></div>
 
     <script>
-        // Simple Cart System
+        // Global variables - available immediately
         let cart = [];
+        let deferredPrompt;
+        let installBannerDismissed = false;
 
+        // Global Cart Functions - defined immediately
         function addToCart(name, price) {
+            console.log('Adding to cart:', name, price); // Debug log
+            
             // Find if item already exists
             const existingItem = cart.find(item => item.name === name);
             
@@ -728,6 +1173,8 @@
 
         function updateCartDisplay() {
             const cartCount = document.getElementById('cartCount');
+            if (!cartCount) return; // Exit if element not found
+            
             const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
             
             if (totalItems > 0) {
@@ -749,6 +1196,8 @@
 
         function showCartModal() {
             const modal = document.getElementById('cartModal');
+            if (!modal) return; // Exit if element not found
+            
             const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
             
             modal.innerHTML = `
@@ -763,7 +1212,7 @@
                                 <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0; border-bottom: 1px solid #f0f0f0;">
                                     <div>
                                         <strong>${item.name}</strong><br>
-                                        <small>$${item.price} c/u</small>
+                                        <small>${item.price} c/u</small>
                                     </div>
                                     <div style="display: flex; align-items: center; gap: 0.5rem;">
                                         <button onclick="updateQuantity(${index}, -1)" style="background: var(--primary-red); color: white; border: none; border-radius: 50%; width: 25px; height: 25px; cursor: pointer;">-</button>
@@ -795,16 +1244,21 @@
         }
 
         function closeCartModal() {
-            document.getElementById('cartModal').style.display = 'none';
+            const modal = document.getElementById('cartModal');
+            if (modal) {
+                modal.style.display = 'none';
+            }
         }
 
         function updateQuantity(index, change) {
-            cart[index].quantity += change;
-            if (cart[index].quantity <= 0) {
-                cart.splice(index, 1);
+            if (cart[index]) {
+                cart[index].quantity += change;
+                if (cart[index].quantity <= 0) {
+                    cart.splice(index, 1);
+                }
+                updateCartDisplay();
+                showCartModal(); // Refresh the modal
             }
-            updateCartDisplay();
-            showCartModal(); // Refresh the modal
         }
 
         function proceedToOrder() {
@@ -830,9 +1284,12 @@
 
         function showNotification(message) {
             const notification = document.createElement('div');
+            const bannerElement = document.getElementById('pwaInstallBanner');
+            const topPosition = (bannerElement && bannerElement.classList.contains('show')) ? '100px' : '20px';
+            
             notification.style.cssText = `
                 position: fixed;
-                top: 20px;
+                top: ${topPosition};
                 right: 20px;
                 background: var(--deep-green);
                 color: white;
@@ -841,6 +1298,8 @@
                 z-index: 3000;
                 font-weight: bold;
                 box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                max-width: 300px;
+                word-wrap: break-word;
             `;
             notification.textContent = message;
             document.body.appendChild(notification);
@@ -852,129 +1311,81 @@
             }, 2000);
         }
 
-        // Service Worker Registration
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js')
-                    .then((registration) => {
-                        console.log('SW registered: ', registration);
-                    })
-                    .catch((registrationError) => {
-                        console.log('SW registration failed (this is normal in preview): ', registrationError.message);
-                    });
-            });
+        // PWA Functions
+        function isStandalone() {
+            return window.matchMedia('(display-mode: standalone)').matches || 
+                   window.navigator.standalone || 
+                   document.referrer.includes('android-app://');
         }
 
-        // PWA Installation
-        let deferredPrompt;
-        
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault();
-            deferredPrompt = e;
-        });
-
-        function hideInstallPrompt() {
-            // This function is no longer needed but kept for compatibility
-            document.getElementById('installPrompt').style.display = 'none';
+        function showInstallBanner() {
+            if (isStandalone() || installBannerDismissed) return;
+            
+            const banner = document.getElementById('pwaInstallBanner');
+            const body = document.body;
+            
+            if (banner && body) {
+                setTimeout(() => {
+                    banner.classList.add('show');
+                    body.classList.add('banner-shown');
+                }, 2000);
+            }
         }
 
-        async function installApp() {
-            if (deferredPrompt) {
-                // Show browser's native install dialog
+        function hideInstallBanner() {
+            const banner = document.getElementById('pwaInstallBanner');
+            const body = document.body;
+            
+            if (banner && body) {
+                banner.classList.remove('show');
+                body.classList.remove('banner-shown');
+            }
+        }
+
+        async function installPWA() {
+            if (!deferredPrompt) {
+                alert('Para instalar la app:\n\n1. Toca el menú de tu navegador (⋮)\n2. Selecciona "Agregar a pantalla de inicio"\n3. Confirma la instalación');
+                return;
+            }
+
+            try {
                 deferredPrompt.prompt();
                 const { outcome } = await deferredPrompt.userChoice;
                 
                 if (outcome === 'accepted') {
-                    showNotification('¡App instalada exitosamente! 🎉');
-                    document.getElementById('installPrompt').style.display = 'none';
-                } else {
-                    showNotification('Instalación cancelada. Puedes instalar más tarde.');
+                    hideInstallBanner();
+                    setTimeout(() => {
+                        alert('¡App instalada correctamente! 🎉\nEncontrarás el ícono en tu pantalla de inicio.');
+                    }, 1000);
                 }
+                
                 deferredPrompt = null;
-            } else {
-                // Fallback instructions for different browsers
-                showInstallInstructions();
+            } catch (error) {
+                console.log('Install prompt error:', error);
             }
         }
 
-        function showInstallInstructions() {
-            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-            const isAndroid = /Android/.test(navigator.userAgent);
+        // Make functions explicitly global (this ensures they're available to onclick handlers)
+        window.addToCart = addToCart;
+        window.showCart = showCart;
+        window.closeCartModal = closeCartModal;
+        window.updateQuantity = updateQuantity;
+        window.proceedToOrder = proceedToOrder;
+
+        // Debug: Verify functions are available
+        console.log('Functions loaded:', {
+            addToCart: typeof window.addToCart,
+            showCart: typeof window.showCart,
+            closeCartModal: typeof window.closeCartModal,
+            updateQuantity: typeof window.updateQuantity,
+            proceedToOrder: typeof window.proceedToOrder
+        });
+
+        // Event listeners for PWA
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
             
-            let instructions = '';
+            if (!isStandalone()) {
+                showInstallBanner();
             
-            if (isIOS) {
-                instructions = `📱 Para instalar en iPhone/iPad:
-                
-1. Toca el botón de compartir (⬆️) en Safari
-2. Selecciona "Agregar a pantalla de inicio"
-3. Toca "Agregar"`;
-            } else if (isAndroid) {
-                instructions = `📱 Para instalar en Android:
-                
-1. Toca el menú (⋮) en tu navegador
-2. Selecciona "Agregar a pantalla de inicio"
-3. Toca "Agregar"`;
-            } else {
-                instructions = `💻 Para instalar:
-                
-1. Busca el ícono de instalar (⬇️) en la barra de direcciones
-2. Haz clic en "Instalar"
-3. Confirma la instalación`;
-            }
-            
-            alert(instructions);
-        }
-
-        // Online/Offline Detection
-        const offlineIndicator = document.getElementById('offlineIndicator');
-
-        function updateOnlineStatus() {
-            if (navigator.onLine) {
-                offlineIndicator.classList.remove('show');
-            } else {
-                offlineIndicator.classList.add('show');
-            }
-        }
-
-        if (window.location.hostname !== 'www.claudeusercontent.com') {
-            window.addEventListener('online', updateOnlineStatus);
-            window.addEventListener('offline', updateOnlineStatus);
-        }
-        updateOnlineStatus();
-
-        // Restaurant Status
-        function updateRestaurantStatus() {
-            const statusIndicator = document.getElementById('statusIndicator');
-            const now = new Date();
-            const day = now.getDay();
-            const hour = now.getHours();
-            const minute = now.getMinutes();
-            const time = hour + (minute / 60);
-
-            const isOpen = day !== 1 && time >= 6.5 && time <= 12.0;
-
-            if (isOpen) {
-                statusIndicator.textContent = 'ABIERTO';
-                statusIndicator.style.background = 'var(--golden-yellow)';
-            } else {
-                statusIndicator.textContent = 'CERRADO';
-                statusIndicator.style.background = '#ff9800';
-            }
-        }
-
-        updateRestaurantStatus();
-        setInterval(updateRestaurantStatus, 60000);
-
-        // Prevent zoom on double tap (iOS Safari)
-        let lastTouchEnd = 0;
-        document.addEventListener('touchend', function (event) {
-            const now = (new Date()).getTime();
-            if (now - lastTouchEnd <= 300) {
-                event.preventDefault();
-            }
-            lastTouchEnd = now;
-        }, false);
-    </script>
-</body>
-</html>
